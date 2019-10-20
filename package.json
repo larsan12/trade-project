@@ -1,0 +1,29 @@
+{
+  "name": "vkr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "combinations": "^0.1.1",
+    "finalhandler": "^1.1.1",
+    "js-combinatorics": "^0.5.4",
+    "knex": "^0.16.5",
+    "mysql": "^2.16.0",
+    "napajs": "^0.4.0-pre",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.9.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "serve-static": "^1.13.2"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "^4.19.1",
+    "eslint-config-google": "^0.9.1"
+  }
+}
