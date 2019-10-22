@@ -1,6 +1,7 @@
 /* eslint-disable camelcase, require-jsdoc */
 const IDao = require('./IDao.js');
 const BaseError = require('../components/base-error');
+const {serializeObject} = require('../components/utils');
 
 /**
  * @class
@@ -24,7 +25,7 @@ class AgentsDao extends IDao {
             .agents()
             .select(fields)
             .where({
-                full_config: JSON.stringify(config),
+                full_config: serializeObject(config),
                 data_set_id: dataSet.id,
             })
             .pool())[0];
@@ -33,7 +34,7 @@ class AgentsDao extends IDao {
         if (!agent) {
             agent = {
                 divergence,
-                full_config: JSON.stringify(config),
+                full_config: serializeObject(config),
                 data_set_id: dataSet.id,
             };
             await this
