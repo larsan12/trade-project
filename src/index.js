@@ -26,7 +26,11 @@ const test = async () => {
         stepsAhead: 3,
         comission: 0.00034,
     };
-    const agent = await agentsDao.createAgentIfNotExist('sber_test', config, 300, 300 * 0.08);
+    const predicateConfig = [
+        ['Compare', 'open', 3],
+        ['Compare', 'close', 3],
+    ];
+    const agent = await agentsDao.createAgentIfNotExist('sber_test', config, predicateConfig, 300, 300 * 0.08);
     return agent;
 };
 

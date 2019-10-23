@@ -8,27 +8,22 @@ const {serializeObject} = require('../components/utils');
  * @extends {IDao}
  */
 class AgentsDao extends IDao {
-    async createAgentIfNotExist(company, config, int, div) {
+    async createAgentIfNotExist(company, config, predicateConfig, int, div) {
         const divergence = parseInt(div);
         const interval = parseInt(int);
-        const {dataSetsDao} = this.agg;
+        const {dataSetsDao, predicatesDao} = this.agg;
+
+        const predicate = await predicatesDao.getOrCreatePredicate(predicateConfig);
         const dataSet = await dataSetsDao.getDataSet(company, interval);
         if (!dataSet) {
             throw new BaseError(`no data set for company ${company}, interval: ${interval}`);
         }
-        const fields = {
-            id: 'agents.id',
-            divergence: 'agents.divergence',
-            data_set_id: 'agents.data_set_id',
-        };
-        let agent = (await this
-            .agents()
-            .select(fields)
-            .where({
-                full_config: serializeObject(config),
-                data_set_id: dataSet.id,
-            })
-            .pool())[0];
+
+        let agent = await this.getAgent({
+            full_config: serializeObject(config),
+            data_set_id: dataSet.id,
+            predicate_id: predicate.id,
+        });
 
         // insert if not exist
         if (!agent) {
@@ -36,11 +31,13 @@ class AgentsDao extends IDao {
                 divergence,
                 full_config: serializeObject(config),
                 data_set_id: dataSet.id,
+                predicate_id: predicate.id,
             };
             await this
                 .agents()
                 .insert(agent)
                 .pool();
+            agent = await this.getAgent(agent);
         }
 
         if (agent.divergence !== divergence) {
@@ -60,6 +57,16 @@ class AgentsDao extends IDao {
             interval,
             divergence,
         };
+    }
+
+    async getAgent(where) {
+        const result = (await this
+            .agents()
+            .select('*')
+            .where(where)
+            .pool())[0];
+
+        return result;
     }
 }
 

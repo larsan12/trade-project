@@ -23,6 +23,8 @@ class IDao {
          */
         this.agents = () => this.decorate(knex.withSchema(this.schema).from('agents'));
         this.dataSets = () => this.decorate(knex.withSchema(this.schema).from('data_sets'));
+        this.predicates = () => this.decorate(knex.withSchema(this.schema).from('predicates'));
+        this.data = () => this.decorate(knex.withSchema(this.schema).from('data'));
     }
 
     /**
