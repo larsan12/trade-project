@@ -25,6 +25,8 @@ class IDao {
         this.dataSets = () => this.decorate(knex.withSchema(this.schema).from('data_sets'));
         this.predicates = () => this.decorate(knex.withSchema(this.schema).from('predicates'));
         this.data = () => this.decorate(knex.withSchema(this.schema).from('data'));
+        this.hypoteses = () => this.decorate(knex.withSchema(this.schema).from('hypoteses'));
+        this.hypotesesHist = () => this.decorate(knex.withSchema(this.schema).from('hypoteses_hist'));
     }
 
     /**

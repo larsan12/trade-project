@@ -20,15 +20,16 @@ class PredicatesDao extends IDao {
             where.dataSetId = dataSetId;
         }
 
-        let predicate = await this.getPredicate(where);
+        const predicate = (await this.getPredicate(where)) || {};
 
         // insert if not exist
         if (!predicate) {
-            await this
+            const {id} = (await this
                 .predicates()
+                .returning('id')
                 .insert(where)
-                .pool();
-            predicate = await this.getPredicate(where);
+                .pool())[0];
+            predicate.id = id;
         }
 
         return predicate;

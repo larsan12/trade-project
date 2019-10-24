@@ -33,11 +33,12 @@ class AgentsDao extends IDao {
                 data_set_id: dataSet.id,
                 predicate_id: predicate.id,
             };
-            await this
+            const {id} = (await this
                 .agents()
+                .returning('id')
                 .insert(agent)
-                .pool();
-            agent = await this.getAgent(agent);
+                .pool())[0];
+            agent.id = id;
         }
 
         if (agent.divergence !== divergence) {

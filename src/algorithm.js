@@ -143,21 +143,6 @@ class Algorithm {
         return result
     }
 
-    getActiveBody(comb, type, i) {
-        return {
-            type: type,
-            probability: type == 'up' ? comb.up[i]/comb.all : comb.down[i]/comb.all,
-            commulationPerStep: type == 'up' ? (comb.commulate_up[i] - 1)/(comb.up[i] * i) : (comb.commulate_down[i] - 1)/(comb.down[i] * i),
-            all: comb.all,
-            allSteps: type == 'up' ? (comb.up[i] * i) : (comb.down[i] * i),
-            string: comb.string,
-            commulate_hist: type == 'up' ? comb.commulate_hist_up[i] : comb.commulate_hist_down[i],
-            stepsAhead: i,
-            id: comb.id,
-            comb
-        }
-    }
-
     getProfit(start, end) {
         return ((this.data[end].close - this.config.comission * 2)/ this.data[start].close)
     }
@@ -246,6 +231,21 @@ class Algorithm {
         this.profit = this.profit * operation.profit
         this.operations.push(operation)
         this.nextStepFrom = index + steps
+    }
+
+    getActiveBody(comb, type, i) {
+        return {
+            type: type,
+            probability: type == 'up' ? comb.up[i]/comb.all : comb.down[i]/comb.all,
+            commulationPerStep: type == 'up' ? (comb.commulate_up[i] - 1)/(comb.up[i] * i) : (comb.commulate_down[i] - 1)/(comb.down[i] * i),
+            all: comb.all,
+            allSteps: type == 'up' ? (comb.up[i] * i) : (comb.down[i] * i),
+            string: comb.string,
+            commulate_hist: type == 'up' ? comb.commulate_hist_up[i] : comb.commulate_hist_down[i],
+            stepsAhead: i,
+            id: comb.id,
+            comb
+        }
     }
 
     initCombinationFields(combId) {
