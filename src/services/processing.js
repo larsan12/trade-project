@@ -1,11 +1,12 @@
-/* eslint-disable require-jsdoc */
-const Combinatorics = require('js-combinatorics');
+const Combinatorics = require('js-combinatorics')
+
 
 // TODO count commulation for operations
 
 class Algorithm {
+    
     constructor(config, ...predicates) {
-        this.availableData = []
+        this.data = []
         this.combs = []
         this.predicates = predicates
         this.config = config
@@ -21,10 +22,6 @@ class Algorithm {
         return 1886;
     }
 
-    addRow(row) {
-        this.availableData.push(row);
-    }
-
     finishOperation() {
         const {currentOperation: operation} = this;
         operation.profit = this.getProfit(operation.from, operation.to);
@@ -33,30 +30,29 @@ class Algorithm {
     }
 
     getProfit(start, end) {
-        return ((this.availableData[end].close - this.config.comission * 2)/ this.availableData[start].close)
+        return ((this.data[end].close - this.config.comission * 2)/ this.data[start].close)
     }
 
     /**
      * TODO
      * change getOperations and train order
-     * check break
      */
 
     process(row) {
-        this.addRow(row);
-        const index = this.availableData.length - 1;
+        this.data.push(row);
+        const index = this.data.length - 1;
+        if (!this.data.slice(-this.stepsAhead).some(row => row.break)) {
+            this.train(index - this.stepsAhead)
+            if (index > this.trainLength) {
+                this.active = this.getActiveByTopCriteria(index);
+            }
+        }
         if (index > this.trainLength) {
             if (this.currentOperation && this.currentOperation.to === index) {
                 this.finishOperation();
             }
             if (!this.currentOperation) {
                 this.currentOperation = this.getOperation(index);
-            }
-        }
-        if (!this.availableData.slice(-this.stepsAhead).some(row => row.break)) {
-            this.train(index - this.stepsAhead)
-            if (index >= this.trainLength) {
-                this.active = this.getActiveByTopCriteria(index);
             }
         }
     }
@@ -157,7 +153,7 @@ class Algorithm {
     getCombIds(index) {
         try {
             return Combinatorics.cartesianProduct(...this.predicates.map(p => {
-                const ids = p.getIds(index, this.availableData)
+                const ids = p.getIds(index, this.data)
                 if (!ids || !ids.length) {
                     throw new Error('no id')
                 }
@@ -181,7 +177,7 @@ class Algorithm {
             c.all++
 
             for (let i = 1; i <= this.config.stepsAhead; i++) {
-                if (this.availableData.length > index + i) {
+                if (this.data.length > index + i) {
                     if (this.isProfitable(index, index + i)) {
                         c.up[i]++
                     } else {
@@ -286,4 +282,4 @@ class Algorithm {
     }
 }
 
-module.exports = Algorithm;
+module.exports = Algorithm
