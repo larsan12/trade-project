@@ -1,71 +1,63 @@
 /* eslint-disable require-jsdoc */
 const Combinatorics = require('js-combinatorics');
 
+// TODO count commulation for operations
 
 class Algorithm {
-    constructor(config, data, ...predicates) {
-        this.availableData = [];
-        this.combs = [];
-        this.predicates = predicates;
-        this.config = config;
-        this.data = data;
-        this.stepsAhead = config.stepsAhead;
-        // for report
-        this.comb_limit = config.comb_limit || 50;
-    }
-
-    processing() {
-        console.log('Start processing');
-        this.train();
-        this.checkHypotheses();
-        return this.getResultBody();
-    }
-
-    pushNewData(numberRows) {
-        this.availableData = this.availableData.concat(
-            this.data.slice(this.availableData.length, this.availableData.length + numberRows)
-        );
-    }
-
-    // break у данных, если с предыдущими данными есть разрыв
-    getNextIndex(ind) {
-        let i = ind + 1
-        // check break flag
-        while(this.data.slice(i + 1, i + this.stepsAhead + 1).some(val => val.break)) {
-            const lastBreak = this.data.slice(i + 1, i + this.stepsAhead + 1).map(v => v.break).lastIndexOf(true)
-            i = (lastBreak !== - 1 ? lastBreak : 1) + i + 1
-        }
-        if (i % 100 === 0) {
-            console.log(`progress: ${i}/${this.data.length}`)
-        }
-        this.pushNewData(i - ind)
-        return i
-    }
-
-    train() {
-        console.log('Start training')
-        const len = parseInt(this.data.length * this.config.trainVolume)
-        this.pushNewData(this.stepsAhead + 1)
-        let i = 0
-        while (i <= len) {
-            this.processRow(i)
-            i = this.getNextIndex(i)
-        }
-        // set active
-        this.active = this.getActiveByTopCriteria(len)
-    }
-
-    checkHypotheses() {
+    constructor(config, ...predicates) {
+        this.availableData = []
+        this.combs = []
+        this.predicates = predicates
+        this.config = config
+        this.stepsAhead = config.stepsAhead
+        this.trainLength = this.getTrainLength();
         this.profit = 1
         this.operations = []
-        this.pushNewData(1)
-        let i = this.availableData.length - this.stepsAhead
-        while (i < this.data.length) {
-            if (!this.nextStepFrom || this.nextStepFrom <= i) {
-                this.checkRow(i)
+        // for report
+        this.comb_limit = config.comb_limit || 50
+    }
+
+    getTrainLength() {
+        return 1886;
+    }
+
+    addRow(row) {
+        this.availableData.push(row);
+    }
+
+    finishOperation() {
+        const {currentOperation: operation} = this;
+        operation.profit = this.getProfit(operation.from, operation.to);
+        this.profit = this.profit * operation.profit;
+        this.currentOperation = undefined;
+    }
+
+    getProfit(start, end) {
+        return ((this.availableData[end].close - this.config.comission * 2)/ this.availableData[start].close)
+    }
+
+    /**
+     * TODO
+     * change getOperations and train order
+     * check break
+     */
+
+    process(row) {
+        this.addRow(row);
+        const index = this.availableData.length - 1;
+        if (index > this.trainLength) {
+            if (this.currentOperation && this.currentOperation.to === index) {
+                this.finishOperation();
             }
-            this.processRow(i - this.stepsAhead * 2, false)
-            i = this.getNextIndex(i)
+            if (!this.currentOperation) {
+                this.currentOperation = this.getOperation(index);
+            }
+        }
+        if (!this.availableData.slice(-this.stepsAhead).some(row => row.break)) {
+            this.train(index - this.stepsAhead)
+            if (index >= this.trainLength) {
+                this.active = this.getActiveByTopCriteria(index);
+            }
         }
     }
 
@@ -143,8 +135,19 @@ class Algorithm {
         return result
     }
 
-    getProfit(start, end) {
-        return ((this.data[end].close - this.config.comission * 2)/ this.data[start].close)
+    getActiveBody(comb, type, i) {
+        return {
+            type: type,
+            probability: type == 'up' ? comb.up[i]/comb.all : comb.down[i]/comb.all,
+            commulationPerStep: type == 'up' ? (comb.commulate_up[i] - 1)/(comb.up[i] * i) : (comb.commulate_down[i] - 1)/(comb.down[i] * i),
+            all: comb.all,
+            allSteps: type == 'up' ? (comb.up[i] * i) : (comb.down[i] * i),
+            string: comb.string,
+            commulate_hist: type == 'up' ? comb.commulate_hist_up[i] : comb.commulate_hist_down[i],
+            stepsAhead: i,
+            id: comb.id,
+            comb
+        }
     }
 
     isProfitable(start, end) {
@@ -168,7 +171,7 @@ class Algorithm {
         }
     }
 
-    processRow(index, isTrain = true) {
+    train(index) {
         this.getCombIds(index).forEach(combId => {
             if (!this.combs[combId]) {
                 this.initCombinationFields(combId)
@@ -205,14 +208,9 @@ class Algorithm {
                 }
             }
         })
-
-        // remove unactual active hypoteses
-        if (!isTrain) {
-            this.active = this.getActiveByTopCriteria(index)
-        }
     }
 
-    checkRow(index) {
+    getOperation(index) {
         const hypotes = this.getCombIds(index)
             .reduce((res, combId) => res.concat(this.active.filter(obj => obj.comb.id === combId)), [])
             .sort((a, b) => b.commulationPerStep - a.commulationPerStep)[0]
@@ -221,31 +219,14 @@ class Algorithm {
         }
         const steps = hypotes.stepsAhead
         const operation = {
-            profit: this.getProfit(index, index + steps),
             obj: hypotes,
             steps: steps,
             from: index,
             id: hypotes.id,
             to: index + steps,
         }
-        this.profit = this.profit * operation.profit
         this.operations.push(operation)
-        this.nextStepFrom = index + steps
-    }
-
-    getActiveBody(comb, type, i) {
-        return {
-            type: type,
-            probability: type == 'up' ? comb.up[i]/comb.all : comb.down[i]/comb.all,
-            commulationPerStep: type == 'up' ? (comb.commulate_up[i] - 1)/(comb.up[i] * i) : (comb.commulate_down[i] - 1)/(comb.down[i] * i),
-            all: comb.all,
-            allSteps: type == 'up' ? (comb.up[i] * i) : (comb.down[i] * i),
-            string: comb.string,
-            commulate_hist: type == 'up' ? comb.commulate_hist_up[i] : comb.commulate_hist_down[i],
-            stepsAhead: i,
-            id: comb.id,
-            comb
-        }
+        return operation;
     }
 
     initCombinationFields(combId) {
@@ -305,4 +286,4 @@ class Algorithm {
     }
 }
 
-module.exports = Algorithm
+module.exports = Algorithm;
