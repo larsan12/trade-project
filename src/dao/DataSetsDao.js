@@ -6,7 +6,7 @@ const BaseError = require('../components/base-error');
  * @class
  * @extends {IDao}
  */
-class AgentsDao extends IDao {
+class DataSetsDao extends IDao {
     async getDataSet(company, interval) {
         const result = await this.dataSets()
             .select('*')
@@ -17,4 +17,4 @@ class AgentsDao extends IDao {
     }
 }
 
-module.exports = AgentsDao;
+module.exports = DataSetsDao;

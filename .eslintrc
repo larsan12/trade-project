@@ -24,6 +24,8 @@
     "array-callback-return": [
       "error"
     ],
+    "guard-for-in": "off",
+    "camelcase":"off",
     "arrow-body-style": [
       "error",
       "as-needed"
@@ -37,12 +39,6 @@
       {
         "before": true,
         "after": true
-      }
-    ],
-    "camelcase": [
-      "error",
-      {
-        "properties": "always"
       }
     ],
     "curly": [

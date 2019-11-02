@@ -7,3 +7,6 @@
 ## 2. Try mining:
 ### node ./sber5min7days.js
 ### go to http://localhost:8111/test/index.html to see results
+
+ограничения :
+нельзя вставлять данные в середину пока один из агентов работает

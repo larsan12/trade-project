@@ -1,14 +1,15 @@
-const pg = require('pg');
+const Aggregator = require('./services/Aggregator');
 const config = require('./config.json');
-const pool = new pg.Pool(config.db);
 
-const Aggregator = require('./services/aggregator');
-
-const aggregator = new Aggregator(pool, config);
-const {agentsDao} = aggregator;
+const aggregator = new Aggregator(config);
+const {agentService} = aggregator;
 
 const test = async () => {
     const config = {
+        company: 'sber_test',
+        divergence: 300 * 0.08,
+        interval: 300,
+        // algo:
         noDown: true,
         density: 0.3,
         minCount: 10,
@@ -30,8 +31,8 @@ const test = async () => {
         ['Compare', 'open', 3],
         ['Compare', 'close', 3],
     ];
-    const agent = await agentsDao.createAgentIfNotExist('sber_test', config, predicateConfig, 300, 300 * 0.08);
-    return agent;
+
+    await agentService.init(config, predicateConfig);
 };
 
 test()

@@ -8,7 +8,12 @@ const {serializeObject} = require('../components/utils');
  * @extends {IDao}
  */
 class AgentsDao extends IDao {
-    async createAgentIfNotExist(company, config, predicateConfig, int, div) {
+    async createAgentIfNotExist({
+        company,
+        divergence: div,
+        interval: int,
+        ...config
+    }, predicateConfig) {
         const divergence = parseInt(div);
         const interval = parseInt(int);
         const {dataSetsDao, predicatesDao} = this.agg;
@@ -32,6 +37,7 @@ class AgentsDao extends IDao {
                 full_config: serializeObject(config),
                 data_set_id: dataSet.id,
                 predicate_id: predicate.id,
+                last_index: 0,
             };
             const {id} = (await this
                 .agents()
@@ -68,6 +74,14 @@ class AgentsDao extends IDao {
             .pool())[0];
 
         return result;
+    }
+
+    async updateAgent(id, updatedFields) {
+        await this
+            .agents()
+            .where({id})
+            .update(updatedFields)
+            .pool();
     }
 }
 
