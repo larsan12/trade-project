@@ -1,5 +1,6 @@
 const knex = require('knex')({client: 'pg'});
 const queries = require('./queries');
+const BaseError = require('../components/base-error');
 
 /**
  * @class
@@ -10,8 +11,10 @@ class IDao {
      * @param {Object} pool - pool
      * @param {string} schema - schema
      * @param {Object} agg - aggregator
+     * @param {String} table - table
+     * @param {Object} defaultParams - defaultParams
      */
-    constructor(pool, schema, agg) {
+    constructor(pool, schema, agg, table, defaultParams) {
         this.schema = schema;
         this.pool = pool;
         this.knex = knex;
@@ -27,6 +30,85 @@ class IDao {
         this.data = () => this.decorate(knex.withSchema(this.schema).from('data'));
         this.hypoteses = () => this.decorate(knex.withSchema(this.schema).from('hypoteses'));
         this.hypotesesHist = () => this.decorate(knex.withSchema(this.schema).from('hypoteses_hist'));
+        this.operations = () => this.decorate(knex.withSchema(this.schema).from('operations'));
+
+        if (table) {
+            this.table = () => this[table]();
+        }
+
+        if (defaultParams) {
+            this.defaultParams = defaultParams;
+        }
+    }
+    /**
+     * @param {Object} where - where
+     * @param {Number} offset - offset
+     * @param {Array} order - order
+     * @returns {Promise.<Array>} - array of objects
+     */
+    async get(where, offset, order) {
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        let req = this.table().select('*').where(where);
+        if ((this.defaultParams && this.defaultParams.order) || order) {
+            const orderObj = this.defaultParams.order || order;
+            req = req.orderBy(orderObj[0], orderObj[1]);
+        }
+        if (offset) {
+            req = req.offset(offset);
+        }
+        const result = await req.pool();
+        return result;
+    }
+
+    /**
+     * @param {Object} where - where
+     * @param {Number} offset - offset
+     * @param {Array} order - order
+     * @returns {Promise.<Object>} - object
+     */
+    async getOne(where, offset, order) {
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        const result = await this.get(where, offset, order);
+        return result.length ? result[0] : null;
+    }
+
+    /**
+     * @param {Object} data - data
+     * @param {Object|String} returning - returning
+     * @returns {Promise} - empty
+     */
+    async insert(data, returning) {
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        let req = this.table();
+        if (returning) {
+            req = req.returning(returning);
+        }
+        const res = await req.insert(data).pool();
+        if (returning) {
+            return res[0];
+        }
+    }
+
+    /**
+     * @param {*} where - where
+     * @param {*} data - data
+     * @returns {Promise} - empty
+     */
+    async update(where, data) {
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        await this.table()
+            .where(where)
+            .update(data)
+            .pool();
+        return true;
     }
 
     /**

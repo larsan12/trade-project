@@ -6,10 +6,10 @@ const BaseError = require('../components/base-error');
  * @class
  * @extends {IDao}
  */
-class HypotesesHistDao extends IDao {
+class OperationsDao extends IDao {
     constructor(...args) {
-        super(...args, 'hypotesesHist', {order: ['time', 'asc']});
+        super(...args, 'operations', {order: ['time', 'asc']});
     }
 }
 
-module.exports = HypotesesHistDao;
+module.exports = OperationsDao;

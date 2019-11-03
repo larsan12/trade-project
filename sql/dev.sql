@@ -106,3 +106,20 @@ CREATE TABLE test.hypoteses_hist (
 ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_p PRIMARY KEY (hypotes_id, agent_id, "time");
 ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_hypoteses FOREIGN KEY (hypotes_id) REFERENCES test.hypoteses(id);
 ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_agents FOREIGN KEY (agent_id) REFERENCES test.agents(id);
+
+--
+-- Type: TABLE ; Name: operations; Owner: postgres
+--
+
+CREATE TABLE test.operations (
+    agent_id integer NOT NULL,
+    hypotes_id integer NOT NULL,
+    "time" timestamp with time zone NOT NULL,
+    "from" integer NOT NULL,
+    steps smallint NOT NULL,
+    profit real
+);
+ALTER TABLE test.operations ADD CONSTRAINT operations_p PRIMARY KEY (agent_id, "time");
+ALTER TABLE test.operations ADD CONSTRAINT operations_agents FOREIGN KEY (agent_id) REFERENCES test.agents(id);
+ALTER TABLE test.operations ADD CONSTRAINT operations_hypotes FOREIGN KEY (hypotes_id) REFERENCES test.hypoteses(id);
+ALTER TABLE test.operations OWNER TO postgres;

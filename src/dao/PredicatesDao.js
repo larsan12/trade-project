@@ -8,6 +8,9 @@ const {serializeObject} = require('../components/utils');
  * @extends {IDao}
  */
 class PredicatesDao extends IDao {
+    constructor(...args) {
+        super(...args, 'predicates');
+    }
     async getOrCreatePredicate(config, common, dataSetId) {
         const serializedConfig = config.sort();
         const where = {
@@ -20,28 +23,15 @@ class PredicatesDao extends IDao {
             where.dataSetId = dataSetId;
         }
 
-        const predicate = (await this.getPredicate(where)) || {};
+        const predicate = (await this.get(where))[0] || {};
 
         // insert if not exist
         if (!predicate) {
-            const {id} = (await this
-                .predicates()
-                .returning('id')
-                .insert(where)
-                .pool())[0];
+            const {id} = await this.insert(where, 'id')
             predicate.id = id;
         }
 
         return predicate;
-    }
-
-    async getPredicate(where) {
-        const result = (await this
-            .predicates()
-            .select('*')
-            .where(where)
-            .pool())[0];
-        return result;
     }
 }
 

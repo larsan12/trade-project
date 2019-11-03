@@ -7,13 +7,8 @@ const BaseError = require('../components/base-error');
  * @extends {IDao}
  */
 class DataSetsDao extends IDao {
-    async getDataSet(company, interval) {
-        const result = await this.dataSets()
-            .select('*')
-            .where({company, interval})
-            .pool();
-
-        return result[0];
+    constructor(...args) {
+        super(...args, 'dataSets');
     }
 }
 

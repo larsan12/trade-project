@@ -8,6 +8,10 @@ const {serializeObject} = require('../components/utils');
  * @extends {IDao}
  */
 class AgentsDao extends IDao {
+    constructor(...args) {
+        super(...args, 'agents', {order: ['id', 'asc']});
+    }
+
     async createAgentIfNotExist({
         company,
         divergence: div,
@@ -19,12 +23,12 @@ class AgentsDao extends IDao {
         const {dataSetsDao, predicatesDao} = this.agg;
 
         const predicate = await predicatesDao.getOrCreatePredicate(predicateConfig);
-        const dataSet = await dataSetsDao.getDataSet(company, interval);
+        const dataSet = await dataSetsDao.getOne({company, interval});
         if (!dataSet) {
             throw new BaseError(`no data set for company ${company}, interval: ${interval}`);
         }
 
-        let agent = await this.getAgent({
+        let agent = await this.getOne({
             full_config: serializeObject(config),
             data_set_id: dataSet.id,
             predicate_id: predicate.id,
@@ -39,20 +43,12 @@ class AgentsDao extends IDao {
                 predicate_id: predicate.id,
                 last_index: 0,
             };
-            const {id} = (await this
-                .agents()
-                .returning('id')
-                .insert(agent)
-                .pool())[0];
+            const {id} = this.insert(agent, 'id');
             agent.id = id;
         }
 
         if (agent.divergence !== divergence) {
-            await this
-                .agents()
-                .where({id: agent.id})
-                .update({divergence})
-                .pool();
+            await this.update({id: agent.id}, {divergence});
             agent.divergence = divergence;
         }
 
@@ -64,24 +60,6 @@ class AgentsDao extends IDao {
             interval,
             divergence,
         };
-    }
-
-    async getAgent(where) {
-        const result = (await this
-            .agents()
-            .select('*')
-            .where(where)
-            .pool())[0];
-
-        return result;
-    }
-
-    async updateAgent(id, updatedFields) {
-        await this
-            .agents()
-            .where({id})
-            .update(updatedFields)
-            .pool();
     }
 }
 

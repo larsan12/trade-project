@@ -40,14 +40,14 @@ class AgentService {
 
     async train() {
         const {dataDao, agentsDao} = this.aggregator;
-        const data = await dataDao.getData({data_set_id: this.agent.data_set_id}, this.agent.last_index);
+        const data = await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index);
         data.forEach((row, i) => {
             if (i > 0 && !this.isTimeInRange(data[i - 1], row)) {
                 row.break = true;
             }
             this.processing.process(row);
         });
-        await agentsDao.updateAgent(this.agent.id, {last_index: this.agent.last_index + data.length});
+        await agentsDao.update({id: this.agent.id}, {last_index: this.agent.last_index + data.length});
         const result = this.processing.getResultBody();
         return result;
     }

@@ -37,4 +37,5 @@ const test = async () => {
 
 test()
     .then(console.log)
-    .catch(console.trace);
+    .catch(console.trace)
+    .then(process.exit);

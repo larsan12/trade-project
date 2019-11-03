@@ -7,16 +7,8 @@ const BaseError = require('../components/base-error');
  * @extends {IDao}
  */
 class DataDao extends IDao {
-    async getData(where, offset) {
-        let req = this.data()
-            .select('*')
-            .where(where)
-            .orderBy('time', 'asc');
-        if (offset) {
-            req = req.offset(offset);
-        }
-        const result = await req.pool();
-        return result;
+    constructor(...args) {
+        super(...args, 'data', {order: ['time', 'asc']});
     }
 }
 
