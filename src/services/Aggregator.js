@@ -9,6 +9,7 @@ const HypotesesDao = require('../dao/HypotesesDao');
 const HypotesesHistDao = require('../dao/HypotesesHistDao');
 const Processing = require('./Processing');
 const AgentService = require('./AgentService');
+const SyncDbService = require('./SyncDbService');
 /**
  * @class Aggregator
  * @description service logic here
@@ -26,6 +27,7 @@ class Aggregator {
         this.hypotesesDao = new HypotesesDao(pool, schema, this);
         this.hypotesesHistDao = new HypotesesHistDao(pool, schema, this);
         this.agentService = new AgentService(this);
+        this.syncDbService = new SyncDbService(this);
         this.Processing = Processing;
     }
 }

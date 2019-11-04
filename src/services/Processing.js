@@ -1,16 +1,16 @@
 /* eslint-disable require-jsdoc */
 const Combinatorics = require('js-combinatorics');
 const BaseError = require('../components/base-error');
-
-// TODO count commulation for operations
+const Combination = require('./classes/Combination');
 
 class Processing {
-    constructor(config, predicates) {
-        this.data = [];
-        this.combs = [];
+    constructor(config, predicates, syncDbService) {
+        this.syncDbService = syncDbService;
         this.predicates = predicates;
         this.config = config;
         this.stepsAhead = config.stepsAhead;
+        this.data = [];
+        this.combs = [];
         this.trainLength = this.getTrainLength();
         this.profit = 1;
         this.operations = [];
@@ -182,16 +182,12 @@ class Processing {
                     const toDown = 1 / toUp;
 
                     // TODO make hold on strategy
-                    if (c.upBlock[i] <= index) {
+                    if (c.block[i] <= index) {
                         c.commulateUp[i] = c.commulateUp[i] * toUp;
                         c.commulateHistUp[i].push(toUp);
-                        c.upBlock[i] = index + i;
-                    }
-
-                    if (c.downBock[i] <= index) {
                         c.commulateDown[i] = c.commulateDown[i] * toDown;
                         c.commulateHistDown[i].push(toDown);
-                        c.upBlock[i] = index + i;
+                        c.block[i] = index + i;
                     }
                 } else {
                     throw new BaseError('unexpected empty data');
@@ -220,31 +216,8 @@ class Processing {
     }
 
     initCombinationFields(combId) {
-        const result = {
-            id: combId,
-            all: 0,
-            up: {},
-            upBlock: {},
-            commulateUp: {},
-            commulateHistUp: {},
-            down: {},
-            downBock: {},
-            commulateDown: {},
-            commulateHistDown: {},
-            string: combId.split('-').map((id, i) => this.predicates[i].getString(id)).join(' & '),
-        };
-        for (let i = 1; i <= this.config.stepsAhead; i++) {
-            result.up[i] = 0;
-            result.upBlock[i] = 0;
-            result.commulateUp[i] = 1;
-            result.commulateHistUp[i] = [];
-
-            result.down[i] = 0;
-            result.downBock[i] = 0;
-            result.commulateDown[i] = 1;
-            result.commulateHistDown[i] = [];
-        }
-        this.combs[combId] = result;
+        const string = combId.split('-').map((id, i) => this.predicates[i].getString(id)).join(' & ');
+        this.combs[combId] = new Combination(combId, string, this.config.stepsAhead);
     }
 
     getResultBody(combLimit = 50) {

@@ -20,13 +20,13 @@ class AgentService {
     async init(processingConfig, predicatesConf) {
         this.processingConfig = processingConfig;
         this.predicatesConf = predicatesConf;
-        const {agentsDao, Processing} = this.aggregator;
+        const {agentsDao, Processing, syncDbService} = this.aggregator;
         this.agent = await agentsDao.createAgentIfNotExist(
             processingConfig,
             predicatesConf
         );
         this.predicatess = this.getPredicates(predicatesConf);
-        this.processing = new Processing(processingConfig, this.predicatess);
+        this.processing = new Processing(processingConfig, this.predicatess, syncDbService);
         await this.train();
     }
 
