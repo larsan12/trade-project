@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 /* eslint-disable require-jsdoc */
 const Combinatorics = require('js-combinatorics');
 const BaseError = require('../components/base-error');
@@ -58,10 +59,9 @@ class Processing {
             if (curr.all > this.config.minCount) {
                 for (let i = 1; i <= this.config.stepsAhead; i++) {
                     result.push({
-                        type: 'up',
                         probability: curr.up[i] / curr.all,
-                        commulation: curr.commulateUp[i],
-                        commulationPerStep: (curr.commulateUp[i] - 1) / (curr.up[i] * i),
+                        commulation: curr.commulate[i],
+                        commulationPerStep: (curr.commulate[i] - 1) / (curr.up[i] * i),
                         count: curr.all,
                         i,
                         comb: curr,
@@ -84,7 +84,7 @@ class Processing {
             filteredResult.push(curr);
         }
 
-        filteredResult = filteredResult.map(v => this.getActiveBody(v.comb, v.type, v.i));
+        filteredResult = filteredResult.map(v => this.getActiveBody(v.comb, v.i));
 
         if (this.config.borders.length) {
             filteredResult = filteredResult
@@ -105,35 +105,14 @@ class Processing {
         return true;
     }
 
-    bordersIsFine(comb, i, type, bord) {
-        let result = true;
-        const field = type === 'up' ? 'commulateHistUp' : 'commulateHistDown';
-        const hist = comb[field][i];
-        try {
-            bord.forEach(cond => {
-                if (!this.borderIsFine(hist, cond)) {
-                    result = false;
-                    throw 'not okay';
-                }
-            });
-        } catch (err) {
-            if (err !== 'not okay') {
-                throw err;
-            }
-        }
-
-        return result;
-    }
-
-    getActiveBody(comb, type, i) {
+    getActiveBody(comb, i) {
         return {
-            type,
-            probability: type === 'up' ? comb.up[i] / comb.all : comb.down[i] / comb.all,
-            commulationPerStep: type === 'up' ? (comb.commulateUp[i] - 1) / (comb.up[i] * i) : (comb.commulateDown[i] - 1) / (comb.down[i] * i),
+            probability: comb.up[i] / comb.all,
+            commulationPerStep: (comb.commulate[i] - 1) / (comb.up[i] * i),
             all: comb.all,
-            allSteps: type === 'up' ? (comb.up[i] * i) : (comb.down[i] * i),
+            allSteps: comb.up[i] * i,
             string: comb.string,
-            commulateHist: type === 'up' ? comb.commulateHistUp[i] : comb.commulateHistDown[i],
+            commulateHist: comb.commulateHist[i],
             stepsAhead: i,
             id: comb.id,
             comb,
@@ -174,8 +153,6 @@ class Processing {
                 if (this.data.length > index + i) {
                     if (this.isProfitable(index, index + i)) {
                         c.up[i]++;
-                    } else {
-                        c.down[i]++;
                     }
 
                     const toUp = this.getProfit(index, index + i);
@@ -183,10 +160,8 @@ class Processing {
 
                     // TODO make hold on strategy
                     if (c.block[i] <= index) {
-                        c.commulateUp[i] = c.commulateUp[i] * toUp;
-                        c.commulateHistUp[i].push(toUp);
-                        c.commulateDown[i] = c.commulateDown[i] * toDown;
-                        c.commulateHistDown[i].push(toDown);
+                        c.commulate[i] = c.commulate[i] * toUp;
+                        c.commulateHist[i].push(toUp);
                         c.block[i] = index + i;
                     }
                 } else {
@@ -235,11 +210,9 @@ class Processing {
                     const v = this.combs[key];
                     return {
                         all: v.all,
-                        commulateDown: v.commulateDown,
-                        commulateHistDown: v.commulateHistDown,
-                        commulateHistUp: v.commulateHistUp,
-                        commulateUp: v.commulateUp,
-                        down: v.down,
+                        commulateHist: v.commulateHist,
+                        commulate: v.commulate,
+                        down: v.all - v.up,
                         string: v.string,
                         up: v.up,
                         id: v.id,
