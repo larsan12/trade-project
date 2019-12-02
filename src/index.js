@@ -24,7 +24,7 @@ const test = async () => {
             },
         ],
         trainVolume: 0.2,
-        stepsAhead: 1,
+        stepsAhead: 3,
         comission: 0.00034,
     };
     const predicateConfig = [

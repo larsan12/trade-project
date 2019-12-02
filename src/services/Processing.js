@@ -54,19 +54,17 @@ class Processing {
     getActiveByTopCriteria(step) {
         // generate hypoteses
         let result = Object.keys(this.combs).reduce((result, key) => {
-            const curr = this.combs[key];
+            const comb = this.combs[key];
             // Check minCount
-            if (curr.all > this.config.minCount) {
-                for (let i = 1; i <= this.config.stepsAhead; i++) {
+            if (comb.all > this.config.minCount) {
+                comb.hypoteses.forEach(hypotes => {
                     result.push({
-                        probability: curr.up[i] / curr.all,
-                        commulation: curr.commulate[i],
-                        commulationPerStep: (curr.commulate[i] - 1) / (curr.up[i] * i),
-                        count: curr.all,
-                        i,
-                        comb: curr,
+                        probability: hypotes.up / comb.all,
+                        commulation: hypotes.commulate,
+                        commulationPerStep: (hypotes.commulate - 1) / (hypotes.up * hypotes.step),
+                        ...hypotes,
                     });
-                }
+                });
             }
             return result;
         }, []);
@@ -78,13 +76,12 @@ class Processing {
         const maxCount = step * this.config.density;
         let currCount = 0;
         let filteredResult = [];
+        // TODO фильтровать только для разных предикатов.
         while (currCount < maxCount && result.length > 0) {
             const curr = result.shift();
             currCount += curr.comb.all;
             filteredResult.push(curr);
         }
-
-        filteredResult = filteredResult.map(v => this.getActiveBody(v.comb, v.i));
 
         if (this.config.borders.length) {
             filteredResult = filteredResult
@@ -145,29 +142,25 @@ class Processing {
             if (!this.combs[combId]) {
                 this.initCombinationFields(combId);
             }
-
-            const c = this.combs[combId];
-            c.all++;
-
-            for (let i = 1; i <= this.config.stepsAhead; i++) {
-                if (this.data.length > index + i) {
-                    if (this.isProfitable(index, index + i)) {
-                        c.up[i]++;
+            const comb = this.combs[combId];
+            comb.all++;
+            comb.hypoteses.forEach(hypotes => {
+                if (this.data.length > index + hypotes.step) {
+                    if (this.isProfitable(index, index + hypotes.step)) {
+                        hypotes.up++;
                     }
-
-                    const toUp = this.getProfit(index, index + i);
-                    const toDown = 1 / toUp;
+                    const commulation = this.getProfit(index, index + hypotes.step);
 
                     // TODO make hold on strategy
-                    if (c.block[i] <= index) {
-                        c.commulate[i] = c.commulate[i] * toUp;
-                        c.commulateHist[i].push(toUp);
-                        c.block[i] = index + i;
+                    if (hypotes.block <= index) {
+                        hypotes.commulate = hypotes.commulate * commulation;
+                        hypotes.commulateHist.push(commulation);
+                        hypotes.block = index + hypotes.step;
                     }
                 } else {
                     throw new BaseError('unexpected empty data');
                 }
-            }
+            });
         });
     }
 
@@ -178,13 +171,11 @@ class Processing {
         if (!hypotes) {
             return;
         }
-        const steps = hypotes.stepsAhead;
         const operation = {
-            obj: hypotes,
-            steps,
+            hypotes,
             from: index,
             id: hypotes.id,
-            to: index + steps,
+            to: index + hypotes.step,
         };
         this.operations.push(operation);
         return operation;
@@ -196,9 +187,6 @@ class Processing {
     }
 
     getResultBody(combLimit = 50) {
-        this.operations.forEach(v => {
-            delete v.obj.comb;
-        });
         return {
             profit: this.profit,
             operations: this.operations,
@@ -207,15 +195,9 @@ class Processing {
                 .sort((a, b) => this.combs[b].all - this.combs[a].all)
                 .slice(0, combLimit)
                 .map(key => {
-                    const v = this.combs[key];
+                    const comb = this.combs[key];
                     return {
-                        all: v.all,
-                        commulateHist: v.commulateHist,
-                        commulate: v.commulate,
-                        down: v.all - v.up,
-                        string: v.string,
-                        up: v.up,
-                        id: v.id,
+                        all: comb.all,
                     };
                 }),
         };

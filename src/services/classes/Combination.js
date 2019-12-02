@@ -1,4 +1,6 @@
 /* eslint-disable require-jsdoc */
+const Hypotes = require('./Hypotes');
+
 const basket = [];
 class Combination {
     static get basket() {
@@ -11,13 +13,6 @@ class Combination {
         this.steps = steps;
         this.init(source);
         Combination.basket.push(this);
-        this.fieldsCompare = [
-            'all',
-            'up',
-            'block',
-            'commulate',
-            'commulateHist',
-        ];
     }
 
     init(source) {
@@ -32,25 +27,16 @@ class Combination {
 
     setDefault() {
         this.all = 0;
-        this.up = {};
-        this.block = {};
-        this.commulate = {};
-        this.commulateHist = {};
+        this.hypoteses = [];
         for (let i = 1; i <= this.steps; i++) {
-            this.up[i] = 0;
-            this.block[i] = 0;
-            this.commulate[i] = 1;
-            this.commulateHist[i] = [];
+            // TODO source
+            this.hypoteses.push(new Hypotes(this, i, null));
         }
     }
 
     build(source) {
         // TODO
         this.is = 1;
-    }
-
-    fixState() {
-
     }
 }
 
