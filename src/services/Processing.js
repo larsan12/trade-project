@@ -3,6 +3,7 @@
 const Combinatorics = require('js-combinatorics');
 const BaseError = require('../components/base-error');
 const Combination = require('./classes/Combination');
+const Operation = require('./classes/Operations');
 
 class Processing {
     constructor(config, predicates, syncDbService) {
@@ -14,7 +15,6 @@ class Processing {
         this.combs = [];
         this.trainLength = this.getTrainLength();
         this.profit = 1;
-        this.operations = [];
     }
 
     getTrainLength() {
@@ -30,6 +30,10 @@ class Processing {
 
     getProfit(start, end) {
         return ((this.data[end].close - this.config.comission * 2) / this.data[start].close);
+    }
+
+    getTime(ind) {
+        return this.data[ind] && this.data[ind].time;
     }
 
     process(row) {
@@ -60,8 +64,8 @@ class Processing {
                 comb.hypoteses.forEach(hypotes => {
                     result.push({
                         probability: hypotes.up / comb.all,
-                        commulation: hypotes.commulate,
-                        commulationPerStep: (hypotes.commulate - 1) / (hypotes.up * hypotes.step),
+                        commulation: hypotes.cumulation,
+                        commulationPerStep: (hypotes.cumulation - 1) / (hypotes.up * hypotes.step),
                         ...hypotes,
                     });
                 });
@@ -85,7 +89,7 @@ class Processing {
 
         if (this.config.borders.length) {
             filteredResult = filteredResult
-                .filter(v => !this.config.borders.some(b => !this.borderIsFine(v.commulateHist, b)));
+                .filter(v => !this.config.borders.some(b => !this.borderIsFine(v.cumulationHist, b)));
         }
 
         return filteredResult;
@@ -105,11 +109,11 @@ class Processing {
     getActiveBody(comb, i) {
         return {
             probability: comb.up[i] / comb.all,
-            commulationPerStep: (comb.commulate[i] - 1) / (comb.up[i] * i),
+            commulationPerStep: (comb.cumulation[i] - 1) / (comb.up[i] * i),
             all: comb.all,
             allSteps: comb.up[i] * i,
             string: comb.string,
-            commulateHist: comb.commulateHist[i],
+            cumulationHist: comb.cumulationHist[i],
             stepsAhead: i,
             id: comb.id,
             comb,
@@ -153,8 +157,8 @@ class Processing {
 
                     // TODO make hold on strategy
                     if (hypotes.block <= index) {
-                        hypotes.commulate = hypotes.commulate * commulation;
-                        hypotes.commulateHist.push(commulation);
+                        hypotes.cumulation = hypotes.cumulation * commulation;
+                        hypotes.cumulationHist.push(commulation);
                         hypotes.block = index + hypotes.step;
                     }
                 } else {
@@ -171,13 +175,12 @@ class Processing {
         if (!hypotes) {
             return;
         }
-        const operation = {
+        const operation = new Operation(
+            index,
+            index + hypotes.step,
             hypotes,
-            from: index,
-            id: hypotes.id,
-            to: index + hypotes.step,
-        };
-        this.operations.push(operation);
+            this.getTime(index)
+        );
         return operation;
     }
 
@@ -186,20 +189,11 @@ class Processing {
         this.combs[combId] = new Combination(combId, string, this.config.stepsAhead);
     }
 
-    getResultBody(combLimit = 50) {
+    getResultBody() {
         return {
             profit: this.profit,
-            operations: this.operations,
-            config: this.config,
-            combs: Object.keys(this.combs)
-                .sort((a, b) => this.combs[b].all - this.combs[a].all)
-                .slice(0, combLimit)
-                .map(key => {
-                    const comb = this.combs[key];
-                    return {
-                        all: comb.all,
-                    };
-                }),
+            Operation,
+            Combination,
         };
     }
 }

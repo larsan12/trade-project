@@ -8,12 +8,17 @@ const PredicatesDao = require('../dao/PredicatesDao');
 const HypotesesDao = require('../dao/HypotesesDao');
 const HypotesesHistDao = require('../dao/HypotesesHistDao');
 const Processing = require('./Processing');
-const AgentService = require('./AgentService');
 const SyncDbService = require('./SyncDbService');
+const Operations = require('./classes/Operations');
+const Hypotes = require('./classes/Hypotes');
+const Combination = require('./classes/Combination');
+
 /**
  * @class Aggregator
  * @description service logic here
  */
+
+let aggregator = null;
 class Aggregator {
     constructor(config) {
         const {schema} = config;
@@ -26,9 +31,18 @@ class Aggregator {
         this.predicatesDao = new PredicatesDao(pool, schema, this);
         this.hypotesesDao = new HypotesesDao(pool, schema, this);
         this.hypotesesHistDao = new HypotesesHistDao(pool, schema, this);
-        this.agentService = new AgentService(this);
         this.syncDbService = new SyncDbService(this);
+        this.Operations = Operations;
+        this.Hypotes = Hypotes;
+        this.Combination = Combination;
         this.Processing = Processing;
+        aggregator = this;
+    }
+    static get aggregator() {
+        if (!aggregator) {
+            throw new Error('Aggregator not initialized');
+        }
+        return aggregator;
     }
 }
 

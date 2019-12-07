@@ -1,8 +1,8 @@
+const logger = require('./components/logger');
 const Aggregator = require('./services/Aggregator');
 const config = require('./config.json');
-
 const aggregator = new Aggregator(config);
-const {agentService} = aggregator;
+const agentService = require('./services/AgentService');
 
 const test = async () => {
     const config = {
@@ -36,6 +36,6 @@ const test = async () => {
 };
 
 test()
-    .then(console.log)
-    .catch(console.trace)
+    .then(logger.info)
+    .catch(logger.trace)
     .then(process.exit);

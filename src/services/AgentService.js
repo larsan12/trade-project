@@ -1,10 +1,12 @@
 /* eslint-disable require-jsdoc */
 const BaseError = require('../components/base-error');
-const predicatess = require('../predicates');
+const predicates = require('../predicates');
+const logger = require('winston');
+const {aggregator} = require('./Aggregator');
 
 class AgentService {
-    constructor(aggregator) {
-        this.aggregator = aggregator;
+    constructor() {
+        aggregator.agent = this;
         this.promises = [];
     }
 
@@ -14,19 +16,20 @@ class AgentService {
     }
 
     getPredicates(predicatesConf) {
-        return predicatesConf.map(([predicateName, ...args]) => new predicatess[predicateName](...args));
+        return predicatesConf.map(([predicateName, ...args]) => new predicates[predicateName](...args));
     }
 
     async init(processingConfig, predicatesConf) {
         this.processingConfig = processingConfig;
         this.predicatesConf = predicatesConf;
-        const {agentsDao, Processing, syncDbService} = this.aggregator;
+        const {agentsDao, Processing, syncDbService} = aggregator;
         this.agent = await agentsDao.createAgentIfNotExist(
             processingConfig,
             predicatesConf
         );
-        this.predicatess = this.getPredicates(predicatesConf);
-        this.processing = new Processing(processingConfig, this.predicatess, syncDbService);
+        logger.info(`Agent init with config: ${processingConfig} and predicates ${predicatesConf}`);
+        this.predicates = this.getPredicates(predicatesConf);
+        this.processing = new Processing(processingConfig, this.predicates, syncDbService);
         await this.train();
     }
 
@@ -39,8 +42,9 @@ class AgentService {
     }
 
     async train() {
-        const {dataDao, agentsDao} = this.aggregator;
+        const {dataDao, agentsDao} = aggregator;
         const data = await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index);
+        logger.info(`Start training, data length: ${data.length}`);
         data.forEach((row, i) => {
             if (i > 0 && !this.isTimeInRange(data[i - 1], row)) {
                 row.break = true;
@@ -49,8 +53,9 @@ class AgentService {
         });
         await agentsDao.update({id: this.agent.id}, {last_index: this.agent.last_index + data.length});
         const result = this.processing.getResultBody();
+        logger.info(`Training finished with profit: ${result.profit}`);
         return result;
     }
 }
 
-module.exports = AgentService;
+module.exports = new AgentService();

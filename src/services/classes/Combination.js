@@ -1,18 +1,14 @@
 /* eslint-disable require-jsdoc */
+const Serilizable = require('./Serilizable');
 const Hypotes = require('./Hypotes');
 
-const basket = [];
-class Combination {
-    static get basket() {
-        return basket;
-    }
-
+class Combination extends Serilizable {
     constructor(id, string, steps, source) {
+        super();
         this.id = id;
         this.string = string;
         this.steps = steps;
         this.init(source);
-        Combination.basket.push(this);
     }
 
     init(source) {
@@ -30,7 +26,7 @@ class Combination {
         this.hypoteses = [];
         for (let i = 1; i <= this.steps; i++) {
             // TODO source
-            this.hypoteses.push(new Hypotes(this, i, null));
+            this.hypoteses.push(new Hypotes(this, i, null, this.agg));
         }
     }
 

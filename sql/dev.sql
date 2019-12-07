@@ -85,7 +85,7 @@ CREATE TABLE test.hypoteses (
     "all" integer NOT NULL,
     up integer NOT NULL,
     block integer,
-    commulation real NOT NULL,
+    cumulation real NOT NULL,
     id integer NOT NULL
 );
 ALTER TABLE test.hypoteses ALTER id SET DEFAULT nextval('test.hypoteses_ids'::regclass);
