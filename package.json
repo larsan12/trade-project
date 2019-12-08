@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "combinations": "^0.1.1",
-    "deep-object-diff": "^1.1.0",
     "finalhandler": "^1.1.1",
     "js-combinatorics": "^0.5.4",
     "knex": "^0.16.5",
