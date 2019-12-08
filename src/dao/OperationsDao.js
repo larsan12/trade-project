@@ -8,7 +8,10 @@ const BaseError = require('../components/base-error');
  */
 class OperationsDao extends IDao {
     constructor(...args) {
-        super(...args, 'operations', {order: ['time', 'asc']});
+        super(...args, 'operations', {
+            order: ['time', 'asc'],
+            key: ['agent_id', 'time'],
+        });
     }
 }
 

@@ -1,38 +1,23 @@
 /* eslint-disable require-jsdoc */
-const Serilizable = require('./Serilizable');
 const Hypotes = require('./Hypotes');
 
-class Combination extends Serilizable {
-    constructor(id, string, steps, source) {
-        super();
+class Combination {
+    constructor({id, string, steps, all = 0}, isNew = true) {
         this.id = id;
         this.string = string;
         this.steps = steps;
-        this.init(source);
-    }
-
-    init(source) {
-        if (source) {
-            this.build(source);
-            this.fixState();
-        } else {
-            this.isNew = true;
-            this.setDefault();
+        this.all = all;
+        this.isNew = true;
+        if (isNew) {
+            this.hypoteses = [];
+            for (let i = 1; i <= this.steps; i++) {
+                // TODO source
+                this.hypoteses.push(new Hypotes({
+                    comb: this,
+                    step: i,
+                }));
+            }
         }
-    }
-
-    setDefault() {
-        this.all = 0;
-        this.hypoteses = [];
-        for (let i = 1; i <= this.steps; i++) {
-            // TODO source
-            this.hypoteses.push(new Hypotes(this, i, null, this.agg));
-        }
-    }
-
-    build(source) {
-        // TODO
-        this.is = 1;
     }
 }
 

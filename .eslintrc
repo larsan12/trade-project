@@ -107,7 +107,7 @@
     ],
     "max-params": [
       "error",
-      5
+      7
     ],
     "multiline-ternary": [
       "error",
@@ -194,7 +194,7 @@
       "error"
     ],
     "no-new": [
-      "error"
+      "off"
     ],
     "no-new-func": [
       "error"

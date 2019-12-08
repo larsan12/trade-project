@@ -3,7 +3,8 @@
 const Combinatorics = require('js-combinatorics');
 const BaseError = require('../components/base-error');
 const Combination = require('./classes/Combination');
-const Operation = require('./classes/Operations');
+const Operation = require('./classes/Operation');
+const Overlap = require('./classes/Overlap');
 
 class Processing {
     constructor(config, predicates, syncDbService) {
@@ -98,26 +99,12 @@ class Processing {
     borderIsFine(hist, cond) {
         const len = hist.length;
         if (cond.border <= len) {
-            const commulation = hist.slice(len - cond.border).reduce((a, b) => a * b);
+            const commulation = hist.slice(len - cond.border).reduce((a, b) => a * b.value, 1);
             if (commulation < cond.moreThan) {
                 return false;
             }
         }
         return true;
-    }
-
-    getActiveBody(comb, i) {
-        return {
-            probability: comb.up[i] / comb.all,
-            commulationPerStep: (comb.cumulation[i] - 1) / (comb.up[i] * i),
-            all: comb.all,
-            allSteps: comb.up[i] * i,
-            string: comb.string,
-            cumulationHist: comb.cumulationHist[i],
-            stepsAhead: i,
-            id: comb.id,
-            comb,
-        };
     }
 
     isProfitable(start, end) {
@@ -158,7 +145,12 @@ class Processing {
                     // TODO make hold on strategy
                     if (hypotes.block <= index) {
                         hypotes.cumulation = hypotes.cumulation * commulation;
-                        hypotes.cumulationHist.push(commulation);
+                        hypotes.cumulationHist.push(new Overlap({
+                            time: this.getTime(index),
+                            step: index,
+                            value: commulation,
+                            hypotes,
+                        }));
                         hypotes.block = index + hypotes.step;
                     }
                 } else {
@@ -175,18 +167,22 @@ class Processing {
         if (!hypotes) {
             return;
         }
-        const operation = new Operation(
-            index,
-            index + hypotes.step,
+        const operation = new Operation({
+            from: index,
+            to: index + hypotes.step,
             hypotes,
-            this.getTime(index)
-        );
+            time: this.getTime(index),
+        });
         return operation;
     }
 
     initCombinationFields(combId) {
         const string = combId.split('-').map((id, i) => this.predicates[i].getString(id)).join(' & ');
-        this.combs[combId] = new Combination(combId, string, this.config.stepsAhead);
+        this.combs[combId] = new Combination({
+            id: combId,
+            string,
+            steps: this.config.stepsAhead,
+        });
     }
 
     getResultBody() {
@@ -194,6 +190,7 @@ class Processing {
             profit: this.profit,
             Operation,
             Combination,
+            Overlap,
         };
     }
 }

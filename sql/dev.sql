@@ -43,7 +43,8 @@ CREATE TABLE test.predicates (
     id integer NOT NULL,
     full_config text NOT NULL,
     common boolean NOT NULL,
-    data_set_id integer
+    data_set_id integer,
+    agent_id integer
 );
 ALTER TABLE test.predicates ALTER id SET DEFAULT nextval('test.predicates_ids'::regclass);
 ALTER TABLE test.predicates ALTER common SET DEFAULT true;
@@ -97,15 +98,16 @@ ALTER TABLE test.hypoteses OWNER TO postgres;
 -- Type: TABLE ; Name: hypoteses_hist; Owner: postgres
 --
 
-CREATE TABLE test.hypoteses_hist (
+CREATE TABLE test."overlaps" (
     hypotes_id integer NOT NULL,
     agent_id integer NOT NULL,
     "time" time with time zone NOT NULL,
-    value real
+    value real,
+    step smallint,
 );
-ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_p PRIMARY KEY (hypotes_id, agent_id, "time");
-ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_hypoteses FOREIGN KEY (hypotes_id) REFERENCES test.hypoteses(id);
-ALTER TABLE test.hypoteses_hist ADD CONSTRAINT hypoteses_hist_agents FOREIGN KEY (agent_id) REFERENCES test.agents(id);
+ALTER TABLE test."overlaps" ADD CONSTRAINT hypoteses_hist_p PRIMARY KEY (hypotes_id, agent_id, "time");
+ALTER TABLE test."overlaps" ADD CONSTRAINT hypoteses_hist_hypoteses FOREIGN KEY (hypotes_id) REFERENCES test.hypoteses(id);
+ALTER TABLE test."overlaps" ADD CONSTRAINT hypoteses_hist_agents FOREIGN KEY (agent_id) REFERENCES test.agents(id);
 
 --
 -- Type: TABLE ; Name: operations; Owner: postgres

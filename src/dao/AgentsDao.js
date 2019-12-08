@@ -9,7 +9,10 @@ const {serializeObject} = require('../components/utils');
  */
 class AgentsDao extends IDao {
     constructor(...args) {
-        super(...args, 'agents', {order: ['id', 'asc']});
+        super(...args, 'agents', {
+            order: ['id', 'asc'],
+            key: ['id'],
+        });
     }
 
     async createAgentIfNotExist({
@@ -22,7 +25,7 @@ class AgentsDao extends IDao {
         const interval = parseInt(int);
         const {dataSetsDao, predicatesDao} = this.agg;
 
-        const predicate = await predicatesDao.getOrCreatePredicate(predicateConfig);
+        const predicate = await predicatesDao.getOrCreatePredicate(predicateConfig.config, predicateConfig.common);
         const dataSet = await dataSetsDao.getOne({company, interval});
         if (!dataSet) {
             throw new BaseError(`no data set for company ${company}, interval: ${interval}`);
@@ -48,8 +51,16 @@ class AgentsDao extends IDao {
         }
 
         if (agent.divergence !== divergence) {
-            await this.update({id: agent.id}, {divergence});
+            await this.update({id: agent.id, divergence});
             agent.divergence = divergence;
+        }
+
+        if (!predicateConfig.common) {
+            await predicatesDao.update({
+                id: predicate.id,
+                data_set_id: dataSet.id,
+                agent_id: agent.id,
+            });
         }
 
         delete agent.full_config;

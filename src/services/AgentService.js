@@ -2,17 +2,13 @@
 const BaseError = require('../components/base-error');
 const predicates = require('../predicates');
 const logger = require('winston');
-const {aggregator} = require('./Aggregator');
+const Aggregator = require('./Aggregator');
+
+let aggregator;
 
 class AgentService {
-    constructor() {
-        aggregator.agent = this;
-        this.promises = [];
-    }
-
-    async syncDb() {
-        await Promise.all(this.promises);
-        this.promises = [];
+    constructor(config) {
+        aggregator = new Aggregator(this, config);
     }
 
     getPredicates(predicatesConf) {
@@ -28,7 +24,7 @@ class AgentService {
             predicatesConf
         );
         logger.info(`Agent init with config: ${processingConfig} and predicates ${predicatesConf}`);
-        this.predicates = this.getPredicates(predicatesConf);
+        this.predicates = this.getPredicates(predicatesConf.config);
         this.processing = new Processing(processingConfig, this.predicates, syncDbService);
         await this.train();
     }
@@ -51,11 +47,24 @@ class AgentService {
             }
             this.processing.process(row);
         });
-        await agentsDao.update({id: this.agent.id}, {last_index: this.agent.last_index + data.length});
+        await this.saveState();
         const result = this.processing.getResultBody();
         logger.info(`Training finished with profit: ${result.profit}`);
         return result;
     }
+
+    async saveState() {
+        const {agentsDao, Operation, Hypotese, Overlap} = aggregator;
+        try {
+            // TODO load data for processing, steps
+            await agentsDao.update({
+                id: this.agent.id,
+                last_index: this.agent.last_index + this.processing.data.length,
+            });
+        } catch (err) {
+            logger.error(err);
+        }
+    }
 }
 
-module.exports = new AgentService();
+module.exports = AgentService;

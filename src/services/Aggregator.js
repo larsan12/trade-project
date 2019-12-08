@@ -6,12 +6,13 @@ const DataSetsDao = require('../dao/DataSetsDao');
 const DataDao = require('../dao/DataDao');
 const PredicatesDao = require('../dao/PredicatesDao');
 const HypotesesDao = require('../dao/HypotesesDao');
-const HypotesesHistDao = require('../dao/HypotesesHistDao');
+const OverlapsDao = require('../dao/OverlapsDao');
 const Processing = require('./Processing');
 const SyncDbService = require('./SyncDbService');
-const Operations = require('./classes/Operations');
+const Operation = require('./classes/Operation');
 const Hypotes = require('./classes/Hypotes');
 const Combination = require('./classes/Combination');
+const Overlap = require('./classes/Overlap');
 
 /**
  * @class Aggregator
@@ -20,7 +21,8 @@ const Combination = require('./classes/Combination');
 
 let aggregator = null;
 class Aggregator {
-    constructor(config) {
+    constructor(agent, config) {
+        this.agent = agent;
         const {schema} = config;
         const pool = new pg.Pool(config.db);
         this.pool = pool;
@@ -30,11 +32,12 @@ class Aggregator {
         this.dataDao = new DataDao(pool, schema, this);
         this.predicatesDao = new PredicatesDao(pool, schema, this);
         this.hypotesesDao = new HypotesesDao(pool, schema, this);
-        this.hypotesesHistDao = new HypotesesHistDao(pool, schema, this);
+        this.overlapsDao = new OverlapsDao(pool, schema, this);
         this.syncDbService = new SyncDbService(this);
-        this.Operations = Operations;
+        this.Operation = Operation;
         this.Hypotes = Hypotes;
         this.Combination = Combination;
+        this.Overlap = Overlap;
         this.Processing = Processing;
         aggregator = this;
     }

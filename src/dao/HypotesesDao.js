@@ -8,7 +8,10 @@ const BaseError = require('../components/base-error');
  */
 class HypotesesDao extends IDao {
     constructor(...args) {
-        super(...args, 'hypoteses');
+        super(...args, 'hypoteses', {
+            order: ['id', 'asc'],
+            key: ['id'],
+        });
     }
 }
 

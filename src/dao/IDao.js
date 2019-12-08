@@ -1,6 +1,7 @@
 const knex = require('knex')({client: 'pg'});
 const queries = require('./queries');
 const BaseError = require('../components/base-error');
+const logger = require('winston');
 
 /**
  * @class
@@ -14,7 +15,7 @@ class IDao {
      * @param {String} table - table
      * @param {Object} defaultParams - defaultParams
      */
-    constructor(pool, schema, agg, table, defaultParams) {
+    constructor(pool, schema, agg, table, defaultParams = {}) {
         this.schema = schema;
         this.pool = pool;
         this.knex = knex;
@@ -31,14 +32,13 @@ class IDao {
         this.hypoteses = () => this.decorate(knex.withSchema(this.schema).from('hypoteses'));
         this.hypotesesHist = () => this.decorate(knex.withSchema(this.schema).from('hypoteses_hist'));
         this.operations = () => this.decorate(knex.withSchema(this.schema).from('operations'));
+        this.overlaps = () => this.decorate(knex.withSchema(this.schema).from('overlaps'));
 
         if (table) {
             this.table = () => this[table]();
         }
 
-        if (defaultParams) {
-            this.defaultParams = defaultParams;
-        }
+        this.defaultParams = defaultParams;
     }
     /**
      * @param {Object} where - where
@@ -96,17 +96,28 @@ class IDao {
     }
 
     /**
-     * @param {*} where - where
      * @param {*} data - data
      * @returns {Promise} - empty
      */
-    async update(where, data) {
+    async update(data) {
+        const where = {};
+        const fields = {};
+        if (!this.defaultParams.key) {
+            throw new BaseError('set key in constructor');
+        }
         if (!this.table) {
             throw new BaseError('set default table in constructor');
         }
+        Object.keys(data).forEach(key => {
+            if (this.defaultParams.key.includes(key)) {
+                where[key] = data[key];
+            } else {
+                fields[key] = data[key];
+            }
+        });
         await this.table()
             .where(where)
-            .update(data)
+            .update(fields)
             .pool();
         return true;
     }
@@ -210,7 +221,7 @@ class IDao {
             const result = await pgClient.query(req.sql, req.bindings);
             return result && result.rows;
         } catch (err) {
-            console.error(err, req);
+            logger.error(err, req);
             throw new Error(err.message);
         }
     }

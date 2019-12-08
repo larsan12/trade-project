@@ -8,7 +8,10 @@ const BaseError = require('../components/base-error');
  */
 class DataSetsDao extends IDao {
     constructor(...args) {
-        super(...args, 'dataSets');
+        super(...args, 'dataSets', {
+            order: ['id', 'asc'],
+            key: ['id'],
+        });
     }
 }
 
