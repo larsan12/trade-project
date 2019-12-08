@@ -123,6 +123,20 @@ class IDao {
     }
 
     /**
+     * @param {*} where - where
+     */
+    async delete(where) {
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        await this
+            .table()
+            .where(where)
+            .del()
+            .pool();
+    }
+
+    /**
      * @param {Object} query - knex query builder
      * @returns {Object} knex query builder with method pool for postgres query pooling
      */
