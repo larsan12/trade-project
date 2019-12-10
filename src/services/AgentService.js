@@ -50,7 +50,7 @@ class AgentService {
         await this.saveState();
         const result = this.processing.getResultBody();
         logger.info(`Training finished with profit: ${result.profit}`);
-        return result;
+        await agentsDao.removeAgent(this.agent);
     }
 
     async saveState() {

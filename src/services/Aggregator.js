@@ -8,7 +8,6 @@ const PredicatesDao = require('../dao/PredicatesDao');
 const HypotesesDao = require('../dao/HypotesesDao');
 const OverlapsDao = require('../dao/OverlapsDao');
 const Processing = require('./Processing');
-const SyncDbService = require('./SyncDbService');
 const Operation = require('./classes/Operation');
 const Hypotes = require('./classes/Hypotes');
 const Combination = require('./classes/Combination');
@@ -33,7 +32,6 @@ class Aggregator {
         this.predicatesDao = new PredicatesDao(pool, schema, this);
         this.hypotesesDao = new HypotesesDao(pool, schema, this);
         this.overlapsDao = new OverlapsDao(pool, schema, this);
-        this.syncDbService = new SyncDbService(this);
         this.Operation = Operation;
         this.Hypotes = Hypotes;
         this.Combination = Combination;
