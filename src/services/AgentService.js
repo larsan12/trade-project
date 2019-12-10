@@ -25,7 +25,7 @@ class AgentService {
         );
         logger.info(`Agent init with config: ${processingConfig} and predicates ${predicatesConf}`);
         this.predicates = this.getPredicates(predicatesConf.config);
-        this.processing = new Processing(processingConfig, this.predicates, syncDbService);
+        this.processing = new Processing(processingConfig, this.predicates, syncDbService, this.agent);
         await this.train();
     }
 
@@ -59,7 +59,8 @@ class AgentService {
             // TODO load data for processing, steps
             await agentsDao.update({
                 id: this.agent.id,
-                last_index: this.agent.last_index + this.processing.data.length,
+                last_index: this.processing.steps,
+                profit: this.processing.profit,
             });
         } catch (err) {
             logger.error(err);

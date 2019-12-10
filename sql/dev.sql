@@ -62,11 +62,13 @@ CREATE TABLE test.agents (
     full_config text NOT NULL,
     data_set_id integer NOT NULL,
     predicate_id integer NOT NULL,
-    last_index integer
+    last_index integer,
+    profit real
 );
 CREATE SEQUENCE test.agents_ids INCREMENT BY 1 START WITH 1;
 ALTER TABLE test.agents ALTER id SET DEFAULT nextval('test.agents_ids'::regclass);
 ALTER TABLE test.agents ALTER last_index SET DEFAULT 0;
+ALTER TABLE test.agents ALTER profit SET DEFAULT 1;
 ALTER TABLE test.agents ADD CONSTRAINT agents_p PRIMARY KEY (id);
 ALTER TABLE test.agents ADD CONSTRAINT agents_data_sets FOREIGN KEY (data_set_id) REFERENCES test.data_sets(id);
 ALTER TABLE test.agents ADD CONSTRAINT agnts_predicates FOREIGN KEY (predicate_id) REFERENCES test.predicates(id);

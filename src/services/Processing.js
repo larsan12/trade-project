@@ -7,7 +7,7 @@ const Operation = require('./classes/Operation');
 const Overlap = require('./classes/Overlap');
 
 class Processing {
-    constructor(config, predicates, syncDbService) {
+    constructor(config, predicates, syncDbService, agent) {
         this.syncDbService = syncDbService;
         this.predicates = predicates;
         this.config = config;
@@ -15,7 +15,8 @@ class Processing {
         this.data = [];
         this.combs = [];
         this.trainLength = this.getTrainLength();
-        this.profit = 1;
+        this.profit = agent.profit;
+        this.steps = agent.last_index;
     }
 
     getTrainLength() {
@@ -39,6 +40,7 @@ class Processing {
 
     process(row) {
         this.data.push(row);
+        this.steps++;
         const index = this.data.length - 1;
         if (!this.data.slice(-this.stepsAhead).some(row => row.break)) {
             this.train(index - this.stepsAhead);

@@ -45,6 +45,7 @@ class AgentsDao extends IDao {
                 data_set_id: dataSet.id,
                 predicate_id: predicate.id,
                 last_index: 0,
+                profit: 1,
             };
             const {id} = await this.insert(agent, 'id');
             agent.id = id;
