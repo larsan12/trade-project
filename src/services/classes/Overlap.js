@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 const Serilizable = require('./Serilizable');
-const agg = require('../Aggregator').aggregator;
+const agg = require('../Aggregator');
 
 class Overlap extends Serilizable {
     constructor({time, step, value, hypotes}, isNew = true) {
@@ -19,7 +19,7 @@ class Overlap extends Serilizable {
             step: this.step,
             value: this.value,
             hypotes_id: this.hypotes.id,
-            agent_id: agg.agent.id,
+            agent_id: agg.instance.agent.id,
         };
     }
 }

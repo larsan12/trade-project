@@ -1,14 +1,15 @@
 /* eslint-disable require-jsdoc */
 const Serilizable = require('./Serilizable');
-const agg = require('../Aggregator').aggregator;
+const agg = require('../Aggregator.js');
 
 class Hypotes extends Serilizable {
-    constructor({comb, step, up = 0, block = 0, cumulation = 1, id}, isNew = true) {
+    constructor({comb, string, step, up = 0, block = 0, cumulation = 1, id}, isNew = true) {
         super();
         this.comb = comb;
         this.step = step;
         this.cumulationHist = [];
         this.up = up;
+        this.string = string;
         this.block = block;
         this.cumulation = cumulation;
         this.id = id;
@@ -18,7 +19,7 @@ class Hypotes extends Serilizable {
     getDbObject() {
         return {
             comb_id: this.comb.id,
-            predicate_id: agg.agent.predicate_id,
+            predicate_id: agg.instance.agent.predicate_id,
             steps_ahead: this.step,
             string: this.string,
             all: this.comb.all,

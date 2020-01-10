@@ -1,4 +1,5 @@
 const logger = require('./components/logger');
+const winston = require('winston');
 const config = require('./config.json');
 const AgentService = require('./services/AgentService');
 

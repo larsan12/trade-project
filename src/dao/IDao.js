@@ -91,6 +91,9 @@ class IDao {
         }
         const res = await req.insert(data).pool();
         if (returning) {
+            if (Array.isArray(data)) {
+                return res;
+            }
             return res[0];
         }
     }

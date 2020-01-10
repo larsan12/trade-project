@@ -23,6 +23,7 @@ class AgentService {
             processingConfig,
             predicatesConf
         );
+        aggregator.agent = this.agent;
         logger.info(`Agent init with config: ${processingConfig} and predicates ${predicatesConf}`);
         this.predicates = this.getPredicates(predicatesConf.config);
         this.processing = new Processing(processingConfig, this.predicates, syncDbService, this.agent);
@@ -47,14 +48,14 @@ class AgentService {
             }
             this.processing.process(row);
         });
-        await this.saveState();
         const result = this.processing.getResultBody();
+        await this.saveState();
         logger.info(`Training finished with profit: ${result.profit}`);
         await agentsDao.removeAgent(this.agent);
     }
 
     async saveState() {
-        const {agentsDao, Operation, Hypotese, Overlap} = aggregator;
+        const {agentsDao, hypotesesDao, Operation, Hypotes, Overlap} = aggregator;
         try {
             // TODO load data for processing, steps
             await agentsDao.update({
@@ -62,6 +63,8 @@ class AgentService {
                 last_index: this.processing.steps,
                 profit: this.processing.profit,
             });
+            await Hypotes.saveAll(hypotesesDao, 'id');
+            logger.info('dddd');
         } catch (err) {
             logger.error(err);
         }

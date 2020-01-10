@@ -1,4 +1,5 @@
 /* eslint-disable require-jsdoc */
+const IDao = require('../../dao/IDao');
 
 const baskets = {};
 class Serilizable {
@@ -8,6 +9,25 @@ class Serilizable {
         }
         baskets[this.name] = [];
         return baskets[this.name];
+    }
+
+    /**
+     * @param {IDao} dao - IDao child
+     * @param {String} returning - returning from db with saving in class
+     */
+    static async saveAll(dao, returning) {
+        if (!baskets[this.name] || !baskets[this.name].length) {
+            return;
+        }
+        const data = baskets[this.name].map(d => d.getDbObject());
+        if (returning) {
+            const returnings = await dao.insert(data, returning);
+            returnings.forEach((v, i) => {
+                baskets[this.name][i][returning] = v;
+            });
+        } else {
+            await dao.insert(data);
+        }
     }
 
     getDbObject() {

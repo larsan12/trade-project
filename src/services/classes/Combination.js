@@ -15,6 +15,7 @@ class Combination {
                 this.hypoteses.push(new Hypotes({
                     comb: this,
                     step: i,
+                    string: `${string} --> v(t).close < v(t + ${i}).close`,
                 }));
             }
         }

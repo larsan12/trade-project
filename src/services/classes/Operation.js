@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 const Serilizable = require('./Serilizable');
-const agg = require('../Aggregator').aggregator;
+const agg = require('../Aggregator');
 
 class Operation extends Serilizable {
     constructor({from, to, hypotes, time}, isNew = true) {
@@ -14,8 +14,11 @@ class Operation extends Serilizable {
 
     getDbObject() {
         // TODO hypotes.id undefined
+        if (!this.hypotes.id) {
+            throw new Error(`hypotes.id is undefined`, this);
+        }
         return {
-            agent_id: agg.agent.id,
+            agent_id: agg.instance.agent.agent.id,
             hypotes_id: this.hypotes.id,
             time: this.time,
             from: this.from,

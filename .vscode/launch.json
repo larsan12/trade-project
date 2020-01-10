@@ -8,13 +8,15 @@
             "type": "node",
             "request": "launch",
             "name": "Run file",
-            "program": "${file}"
+            "program": "${file}",
+            "outputCapture": "std",
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/src/index.js"
+            "program": "${workspaceFolder}/src/index.js",
+            "outputCapture": "std"
         }
     ]
 }

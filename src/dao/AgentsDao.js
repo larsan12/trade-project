@@ -79,14 +79,14 @@ class AgentsDao extends IDao {
      * @param {Object} agent - agent
      */
     async removeAgent({predicate, id}) {
-        if (predicate.common) {
-            const {operationsDao, overlapsDao, hypotesesDao, predicatesDao} = this.agg;
-            await operationsDao.delete({agent_id: id});
-            await overlapsDao.delete({agent_id: id});
+        const {operationsDao, overlapsDao, hypotesesDao, predicatesDao} = this.agg;
+        await operationsDao.delete({agent_id: id});
+        await overlapsDao.delete({agent_id: id});
+        await this.delete({id});
+        if (!predicate.common) {
             await hypotesesDao.delete({predicate_id: predicate.id});
             await predicatesDao.delete({id: predicate.id});
         }
-        await this.delete({id});
     }
 }
 
