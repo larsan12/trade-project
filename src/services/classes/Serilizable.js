@@ -23,7 +23,8 @@ class Serilizable {
         if (returning) {
             const returnings = await dao.insert(data, returning);
             returnings.forEach((v, i) => {
-                baskets[this.name][i][returning] = v;
+                const obj = baskets[this.name][i];
+                obj[returning] = v[returning];
             });
         } else {
             await dao.insert(data);

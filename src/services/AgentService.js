@@ -55,7 +55,15 @@ class AgentService {
     }
 
     async saveState() {
-        const {agentsDao, hypotesesDao, Operation, Hypotes, Overlap} = aggregator;
+        const {
+            agentsDao,
+            hypotesesDao,
+            Operation,
+            operationsDao,
+            Hypotes,
+            overlapsDao,
+            Overlap,
+        } = aggregator;
         try {
             // TODO load data for processing, steps
             await agentsDao.update({
@@ -64,6 +72,8 @@ class AgentService {
                 profit: this.processing.profit,
             });
             await Hypotes.saveAll(hypotesesDao, 'id');
+            await Operation.saveAll(operationsDao);
+            await Overlap.saveAll(overlapsDao);
             logger.info('dddd');
         } catch (err) {
             logger.error(err);

@@ -18,7 +18,7 @@ class Operation extends Serilizable {
             throw new Error(`hypotes.id is undefined`, this);
         }
         return {
-            agent_id: agg.instance.agent.agent.id,
+            agent_id: agg.instance.agent.id,
             hypotes_id: this.hypotes.id,
             time: this.time,
             from: this.from,

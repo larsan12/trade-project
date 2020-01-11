@@ -70,6 +70,7 @@ class Processing {
                         commulation: hypotes.cumulation,
                         commulationPerStep: (hypotes.cumulation - 1) / (hypotes.up * hypotes.step),
                         ...hypotes,
+                        hypotes,
                     });
                 });
             }
@@ -163,16 +164,16 @@ class Processing {
     }
 
     getOperation(index) {
-        const hypotes = this.getCombIds(index)
+        const active = this.getCombIds(index)
             .reduce((res, combId) => res.concat(this.active.filter(obj => obj.comb.id === combId)), [])
             .sort((a, b) => b.commulationPerStep - a.commulationPerStep)[0];
-        if (!hypotes) {
+        if (!active) {
             return;
         }
         const operation = new Operation({
             from: index,
-            to: index + hypotes.step,
-            hypotes,
+            to: index + active.step,
+            hypotes: active.hypotes,
             time: this.getTime(index),
         });
         return operation;

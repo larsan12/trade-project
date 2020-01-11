@@ -234,8 +234,8 @@ class IDao {
         const pgClient = client || this.pool;
         let req;
         try {
-            req = query.toSQL().toNative();
-            const result = await pgClient.query(req.sql, req.bindings);
+            req = query.toString();
+            const result = await pgClient.query(req);
             return result && result.rows;
         } catch (err) {
             logger.error(err, req);
