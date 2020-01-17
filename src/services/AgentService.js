@@ -63,20 +63,26 @@ class AgentService {
             Hypotes,
             overlapsDao,
             Overlap,
+            pool,
         } = aggregator;
+        const client = await pool.connect();
+
         try {
-            // TODO load data for processing, steps
+            await client.query('BEGIN');
             await agentsDao.update({
                 id: this.agent.id,
                 last_index: this.processing.steps,
                 profit: this.processing.profit,
-            });
-            await Hypotes.saveAll(hypotesesDao, 'id');
-            await Operation.saveAll(operationsDao);
-            await Overlap.saveAll(overlapsDao);
-            logger.info('dddd');
+            }, client);
+            await Hypotes.saveAll(hypotesesDao, ['id'], client);
+            await Operation.saveAll(operationsDao, null, client);
+            await Overlap.saveAll(overlapsDao, null, client);
+            await client.query('COMMIT');
         } catch (err) {
             logger.error(err);
+            await client.query('ROLLBACK');
+        } finally {
+            client.release();
         }
     }
 }

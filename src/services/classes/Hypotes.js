@@ -3,8 +3,8 @@ const Serilizable = require('./Serilizable');
 const agg = require('../Aggregator.js');
 
 class Hypotes extends Serilizable {
-    constructor({comb, string, step, up = 0, block = 0, cumulation = 1, id}, isNew = true) {
-        super();
+    constructor({comb, string, step, up = 0, block = 0, cumulation = 1, id}, isNew) {
+        super(isNew);
         this.comb = comb;
         this.step = step;
         this.cumulationHist = [];
@@ -13,7 +13,6 @@ class Hypotes extends Serilizable {
         this.block = block;
         this.cumulation = cumulation;
         this.id = id;
-        this.isNew = isNew;
     }
 
     getDbObject() {

@@ -79,9 +79,10 @@ class IDao {
     /**
      * @param {Object} data - data
      * @param {Object|String} returning - returning
+     * @param {Object} client - pg client for transactions
      * @returns {Promise} - empty
      */
-    async insert(data, returning) {
+    async insert(data, returning, client) {
         if (!this.table) {
             throw new BaseError('set default table in constructor');
         }
@@ -89,7 +90,7 @@ class IDao {
         if (returning) {
             req = req.returning(returning);
         }
-        const res = await req.insert(data).pool();
+        const res = await req.insert(data).pool(client);
         if (returning) {
             if (Array.isArray(data)) {
                 return res;
@@ -100,9 +101,10 @@ class IDao {
 
     /**
      * @param {*} data - data
+     * @param {Object} client - pg client for transactions
      * @returns {Promise} - empty
      */
-    async update(data) {
+    async update(data, client) {
         const where = {};
         const fields = {};
         if (!this.defaultParams.key) {
@@ -121,7 +123,7 @@ class IDao {
         await this.table()
             .where(where)
             .update(fields)
-            .pool();
+            .pool(client);
         return true;
     }
 
@@ -239,7 +241,7 @@ class IDao {
             return result && result.rows;
         } catch (err) {
             logger.error(err, req);
-            throw new Error(err.message);
+            throw err;
         }
     }
 }

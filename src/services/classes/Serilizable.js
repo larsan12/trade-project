@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 /* eslint-disable require-jsdoc */
 const IDao = require('../../dao/IDao');
 
@@ -14,20 +15,30 @@ class Serilizable {
     /**
      * @param {IDao} dao - IDao child
      * @param {String} returning - returning from db with saving in class
+     * @param {Object} client - pg client for transactions
      */
-    static async saveAll(dao, returning) {
+    static async saveAll(dao, returning, client) {
         if (!baskets[this.name] || !baskets[this.name].length) {
             return;
         }
-        const data = baskets[this.name].map(d => d.getDbObject());
+        const index = baskets[this.name].findIndex(obj => obj.isNew);
+        if (index < 0) {
+            return;
+        }
+        const data = baskets[this.name]
+            .slice(index)
+            .map(d => d.getDbObject());
         if (returning) {
-            const returnings = await dao.insert(data, returning);
-            returnings.forEach((v, i) => {
-                const obj = baskets[this.name][i];
-                obj[returning] = v[returning];
+            const returnings = await dao.insert(data, returning, client);
+            const basketLen = baskets[this.name].length;
+            returnings.reverse().forEach((v, i) => {
+                const obj = baskets[this.name][basketLen - i - 1];
+                returning.forEach(key => {
+                    obj[key] = v[key];
+                });
             });
         } else {
-            await dao.insert(data);
+            await dao.insert(data, null, client);
         }
     }
 
@@ -53,7 +64,8 @@ class Serilizable {
         return Object.keys(diff).length && diff;
     }
 
-    constructor() {
+    constructor(isNew = true) {
+        this.isNew = isNew;
         if (!baskets[this.constructor.name]) {
             baskets[this.constructor.name] = [];
         }

@@ -103,7 +103,7 @@ ALTER TABLE test.hypoteses OWNER TO postgres;
 CREATE TABLE test."overlaps" (
     hypotes_id integer NOT NULL,
     agent_id integer NOT NULL,
-    "time" time with time zone NOT NULL,
+    "time" timestamp with time zone NOT NULL,
     value real,
     step smallint,
 );
@@ -119,8 +119,8 @@ CREATE TABLE test.operations (
     agent_id integer NOT NULL,
     hypotes_id integer NOT NULL,
     "time" timestamp with time zone NOT NULL,
-    "from" integer NOT NULL,
-    steps smallint NOT NULL,
+    step integer NOT NULL,
+    "length" smallint NOT NULL,
     profit real
 );
 ALTER TABLE test.operations ADD CONSTRAINT operations_p PRIMARY KEY (agent_id, "time");
