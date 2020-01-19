@@ -42,12 +42,13 @@ class AgentService {
         const {dataDao, agentsDao} = aggregator;
         const data = await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index);
         logger.info(`Start training, data length: ${data.length}`);
-        data.forEach((row, i) => {
+        await data.reduce(async (promise, row, i) => {
+            await promise;
             if (i > 0 && !this.isTimeInRange(data[i - 1], row)) {
                 row.break = true;
             }
-            this.processing.process(row);
-        });
+            await this.processing.process(row);
+        }, Promise.resolve());
         const result = this.processing.getResultBody();
         await this.saveState();
         logger.info(`Training finished with profit: ${result.profit}`);

@@ -5,6 +5,8 @@ const BaseError = require('../components/base-error');
 const Combination = require('./classes/Combination');
 const Operation = require('./classes/Operation');
 const Overlap = require('./classes/Overlap');
+const agg = require('./Aggregator.js');
+
 
 class Processing {
     constructor(config, predicates, syncDbService, agent) {
@@ -38,9 +40,12 @@ class Processing {
         return this.data[ind] && this.data[ind].time;
     }
 
-    process(row) {
+    async process(row) {
         this.data.push(row);
         this.steps++;
+        if (this.steps === 4000) {
+            await agg.instance.agentService.saveState();
+        }
         const index = this.data.length - 1;
         if (!this.data.slice(-this.stepsAhead).some(row => row.break)) {
             this.train(index - this.stepsAhead);

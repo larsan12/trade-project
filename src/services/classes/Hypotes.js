@@ -1,6 +1,7 @@
 /* eslint-disable require-jsdoc */
 const Serilizable = require('./Serilizable');
 const agg = require('../Aggregator.js');
+const knex = require('knex')({client: 'pg'});
 
 class Hypotes extends Serilizable {
     constructor({comb, string, step, up = 0, block = 0, cumulation = 1, id}, isNew) {
@@ -27,6 +28,36 @@ class Hypotes extends Serilizable {
             cumulation: this.cumulation,
         };
     }
-}
 
+    setSaved() {
+        this.isNew = false;
+        this.copy = {
+            all: this.comb.all,
+            up: this.up,
+            cumulation: this.cumulation,
+            block: this.block,
+        };
+    }
+
+    getFieldsToUpdate(keys) {
+        if (this.copy.up !== this.up ||
+            this.copy.all !== this.comb.all ||
+            this.cumulation !== this.copy.cumulation ||
+            this.block !== this.copy.block) {
+            const obj = this.getDbObject();
+            const result = {
+                up: knex.raw(`?? + ${this.up - this.copy.up}`, ['up']),
+                all: knex.raw(`?? + ${this.comb.all - this.copy.all}`, ['all']),
+                cumulation: knex.raw(`?? * ${this.cumulation / this.copy.cumulation}`, ['cumulation']),
+                block: this.block,
+            };
+            keys.forEach(key => {
+                result[key] = obj[key] || this[key];
+            });
+            return result;
+        }
+        return false;
+    }
+}
+Hypotes.needUpdates = true;
 module.exports = Hypotes;
