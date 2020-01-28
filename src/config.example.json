@@ -1,0 +1,10 @@
+{
+    "schema": "test",
+    "db": {
+        "user": "postgres",
+        "host": "localhost",
+        "database": "main",
+        "password": "postgres",
+        "port": 5432
+    }
+}

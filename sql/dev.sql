@@ -105,7 +105,7 @@ CREATE TABLE test."overlaps" (
     agent_id integer NOT NULL,
     "time" timestamp with time zone NOT NULL,
     value real,
-    step smallint,
+    step smallint
 );
 ALTER TABLE test."overlaps" ADD CONSTRAINT hypoteses_hist_p PRIMARY KEY (hypotes_id, agent_id, "time");
 ALTER TABLE test."overlaps" ADD CONSTRAINT hypoteses_hist_hypoteses FOREIGN KEY (hypotes_id) REFERENCES test.hypoteses(id);
