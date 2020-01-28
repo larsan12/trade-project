@@ -14,7 +14,6 @@
     "js-combinatorics": "^0.5.4",
     "knex": "^0.16.5",
     "mysql": "^2.16.0",
-    "napajs": "^0.4.0-pre",
     "node-fetch": "^2.3.0",
     "pg": "^7.9.0",
     "request": "^2.88.0",
