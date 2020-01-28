@@ -39,6 +39,6 @@ const test = async () => {
 };
 
 test()
-    .then(logger.info)
+    .then(() => logger.info('finished'))
     .catch(logger.trace)
     .then(process.exit);

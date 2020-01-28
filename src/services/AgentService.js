@@ -24,7 +24,7 @@ class AgentService {
             predicatesConf
         );
         aggregator.agent = this.agent;
-        logger.info(`Agent init with config: ${processingConfig} and predicates ${predicatesConf}`);
+        logger.info(`Agent init with config: $1 and predicates $2:`, processingConfig, predicatesConf);
         this.predicates = this.getPredicates(predicatesConf.config);
         this.processing = new Processing(processingConfig, this.predicates, syncDbService, this.agent);
         await this.train();
