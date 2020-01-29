@@ -19,12 +19,13 @@ class Processing {
         this.steps = agent.last_index;
         this.agent = agent;
         // calculating
-        this.hypotesHistsLimit = this.getOverlapsLimit();
         this.trainLength = this.getTrainLength();
+        this.hypotesHistsLimit = this.getOverlapsLimit();
     }
 
     getTrainLength() {
-        return 1886;
+        const combsCount = this.predicates.map(p => p.getCount()).reduce((res, curr) => res * curr, 1);
+        return Math.round(this.config.trainAverageCombsCoef * combsCount);
     }
 
     getOverlapsLimit() {

@@ -7,6 +7,7 @@ const test = async () => {
         company: 'sber_test',
         divergence: 300 * 0.08,
         interval: 300,
+        trainAverageCombsCoef: 52.4,
         // algo:
         noDown: true,
         density: 0.3,
@@ -21,7 +22,6 @@ const test = async () => {
                 moreThan: 1,
             },
         ],
-        trainVolume: 0.2,
         stepsAhead: 3,
         comission: 0.00034,
     };
