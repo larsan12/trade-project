@@ -19,6 +19,17 @@ class Compare extends IPredicate {
     }
 
     /**
+     * @returns {ineger} - =depth!
+     */
+    getCount() {
+        let a = 1;
+        for (let i = 1; i <= this.depth; i++) {
+            a = a * i;
+        }
+        return a;
+    }
+
+    /**
      * @param {Array.<object>} row - trades information
      * @returns {Array.<string>} - string of predicate
      */

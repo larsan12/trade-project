@@ -30,7 +30,7 @@ class Serilizable {
             const data = baskets[this.name]
                 .slice(index)
                 .map(d => d.getDbObject());
-            logger.info(`saveAll ${this.name} new - ${data.length} rows`);
+            logger.info(`saveAll new ${this.name} - ${data.length} rows`);
             if (returning) {
                 const returnings = await dao.insert(data, returning, client);
                 const basketLen = baskets[this.name].length;
@@ -51,7 +51,7 @@ class Serilizable {
                 .slice(0, index)
                 .map(d => d.getFieldsToUpdate(dao.defaultParams.key))
                 .filter(v => v);
-            logger.info(`saveAll ${this.name} update - ${data.length} rows`);
+            logger.info(`saveAll update ${this.name} - ${data.length} rows`);
             // TODO multiple update bulk
             await Promise.all(data.map(row => dao.update(row, client)));
         }

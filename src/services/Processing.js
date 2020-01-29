@@ -9,20 +9,26 @@ const agg = require('./Aggregator.js');
 
 
 class Processing {
-    constructor(config, predicates, syncDbService, agent) {
-        this.syncDbService = syncDbService;
+    constructor(config, predicates, agent) {
         this.predicates = predicates;
         this.config = config;
         this.stepsAhead = config.stepsAhead;
         this.data = [];
         this.combs = [];
-        this.trainLength = this.getTrainLength();
         this.profit = agent.profit;
         this.steps = agent.last_index;
+        this.agent = agent;
+        // calculating
+        this.hypotesHistsLimit = this.getOverlapsLimit();
+        this.trainLength = this.getTrainLength();
     }
 
     getTrainLength() {
         return 1886;
+    }
+
+    getOverlapsLimit() {
+        return Math.max(...agg.instance.agentService.processingConfig.borders.map(b => b.border));
     }
 
     finishOperation() {

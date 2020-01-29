@@ -28,7 +28,7 @@ const myFormat = format.printf(info => {
     const data = info[Symbol.for('splat')] || [];
     let additional;
     if (data.length > 1) {
-        additional = `\n${data.map((val, i) => `    data[${i}] :${JSON.stringify(val)}`).join('\n')}`;
+        additional = `\n${data.map((val, i) => `    [${i}] :${JSON.stringify(val)}`).join('\n')}`;
     } else if (data.length > 0) {
         additional = `\n  data :${JSON.stringify(data[0])}`;
     }

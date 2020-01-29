@@ -1,3 +1,4 @@
+/* eslint-disable valid-jsdoc */
 /**
  * @class IPredicate
  * @description parent for all predicates
@@ -11,6 +12,15 @@ class IPredicate {
         this.field = field;
         this.depth = depth;
     }
+
+    /**
+     * @description method should be overrided in child
+     * @returns {integer} - number of possible predicates
+     */
+    getCount() {
+        throw new Error('should be override');
+    }
+
     /**
      * @param {*} index - index from data
      * @param {*} data - data for analysing
