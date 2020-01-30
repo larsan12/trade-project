@@ -21,6 +21,7 @@ class Processing {
         // calculating
         this.trainLength = this.getTrainLength();
         this.hypotesHistsLimit = this.getOverlapsLimit();
+        this.maxDepth = Math.max(...predicates.map(p => p.depth));
     }
 
     getTrainLength() {

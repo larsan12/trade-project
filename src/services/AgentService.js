@@ -40,6 +40,9 @@ class AgentService {
 
     async train() {
         const {dataDao, agentsDao} = aggregator;
+        if (this.agent.last_index > 0) {
+            await this.loadState();
+        }
         const data = await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index);
         logger.info(`Start training, data length: ${data.length}`);
         await data.reduce(async (promise, row, i) => {
@@ -53,6 +56,16 @@ class AgentService {
         await this.saveState();
         logger.info(`Training finished with profit: ${result.profit}`);
         await agentsDao.removeAgent(this.agent);
+    }
+
+    async loadState() {
+        const {dataDao, operationsDao, hypotesesDao} = aggregator;
+        const {processing} = this;
+        const data = await dataDao.get({data_set_id: this.agent.data_set_id},
+            this.agent.last_index - processing.maxDepth);
+        const operations = await operationsDao.get({agent_id: this.agent.id});
+        const hypoteses = await hypotesesDao.delete({predicate_id: this.agent.predicate.id});
+        // TODO
     }
 
     async saveState() {
