@@ -54,18 +54,21 @@ class AgentService {
         }, Promise.resolve());
         const result = this.processing.getResultBody();
         await this.saveState();
+        await this.loadState();
         logger.info(`Training finished with profit: ${result.profit}`);
         await agentsDao.removeAgent(this.agent);
     }
 
     async loadState() {
-        const {dataDao, operationsDao, hypotesesDao} = aggregator;
+        const {dataDao, operationsDao, hypotesesDao, overlapsDao} = aggregator;
         const {processing} = this;
-        const data = await dataDao.get({data_set_id: this.agent.data_set_id},
-            this.agent.last_index - processing.maxDepth);
+        const data = this.agent.last_index - processing.maxDepth > 0 ?
+            (await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index - processing.maxDepth))
+            : [];
         const operations = await operationsDao.get({agent_id: this.agent.id});
-        const hypoteses = await hypotesesDao.delete({predicate_id: this.agent.predicate.id});
-        // TODO
+        const hypoteses = await hypotesesDao.get({predicate_id: this.agent.predicate.id});
+        const overlaps = await overlapsDao.getLastOverlaps(this.agent.id, processing.hypotesHistsLimit);
+        logger.info('loaded');
     }
 
     async saveState() {

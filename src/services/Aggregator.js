@@ -23,6 +23,8 @@ class Aggregator {
         const HypotesesDao = require('../dao/HypotesesDao');
         const OverlapsDao = require('../dao/OverlapsDao');
         const OperationsDao = require('../dao/OperationsDao');
+        const queries = require('../dao/queries');
+
         const Processing = require('./Processing');
         const Operation = require('./classes/Operation');
         const Hypotes = require('./classes/Hypotes');
@@ -43,6 +45,7 @@ class Aggregator {
         this.Combination = Combination;
         this.Overlap = Overlap;
         this.Processing = Processing;
+        this.queries = queries;
     }
     static get instance() {
         if (!aggregator) {
