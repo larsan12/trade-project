@@ -2,6 +2,7 @@
 /* eslint-disable require-jsdoc */
 const IDao = require('../../dao/IDao');
 const logger = require('winston');
+const assert = require('assert');
 
 const baskets = {};
 class Serilizable {
@@ -57,18 +58,15 @@ class Serilizable {
                     .slice(0, index)
                     .map(d => d.getUpdateValues(true))
                     .filter(v => v);
-                // TEMP
-                if (data.length !== index) {
-                    throw new Error('should be equal');
-                }
+
+                assert.strictEqual(data.length, index);
+
                 if (data.length) {
                     logger.info(`saveAll update ${this.name} - ${data.length} rows`);
                     const result = await dao.bulkUpdate(this.getUpdateParams(true), data, client);
                     result.forEach((v, i) => {
                         const obj = baskets[this.name][i];
-                        if (obj.id !== v.id) {
-                            throw new Error('id should be equal');
-                        }
+                        assert.strictEqual(obj.id, v.id);
                         returningUpdate.forEach(key => {
                             obj[key] = v[key];
                         });
