@@ -21,6 +21,7 @@ class IDao {
         this.knex = knex;
         this.queries = queries;
         this.agg = agg;
+        this.tableName = table;
 
         /*
          * create and decorate knex instances
@@ -125,6 +126,39 @@ class IDao {
             .update(fields)
             .pool(client);
         return true;
+    }
+
+    /**
+     * @param {Object} req - req - string, bulkFields - array of fields
+     * @param {Array} data - data
+     * @param {Object} client - pg client for transactions
+     * @returns {Promise} - empty
+     */
+    async bulkUpdate({req, bulkFields}, data, client) {
+        if (!this.defaultParams.key) {
+            throw new BaseError('set key in constructor');
+        }
+        if (!this.table) {
+            throw new BaseError('set default table in constructor');
+        }
+        const values = data.map(row => `(${row.join(', ')})`).join(`,\n`);
+        const where = [];
+        this.defaultParams.key.forEach(key => {
+            where.push(`t.${key} = bulk.${key}`);
+        });
+        const query = `
+            UPDATE ${this.schema}.${this.tableName} as t
+            SET
+                ${req}
+            FROM (
+                VALUES ${values}
+            ) AS bulk(${bulkFields.map(val => `"${val}"`).join(', ')})
+            WHERE ${where.join(', ')} 
+            RETURNING t.*;
+        `;
+        const pgClient = client || this.pool;
+        const result = await pgClient.query(query);
+        return result && result.rows;
     }
 
     /**

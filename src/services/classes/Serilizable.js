@@ -17,8 +17,9 @@ class Serilizable {
      * @param {IDao} dao - IDao child
      * @param {String} returning - returning from db with saving in class
      * @param {Object} client - pg client for transactions
+     * @param {String} returningUpdate - returning from db with updating in class
      */
-    static async saveAll(dao, returning, client) {
+    static async saveAll(dao, returning, client, returningUpdate) {
         if (!baskets[this.name] || !baskets[this.name].length) {
             logger.info(`saveAll ${this.name}: No data to save`);
             return;
@@ -32,9 +33,9 @@ class Serilizable {
                 .map(d => d.getDbObject());
             logger.info(`saveAll new ${this.name} - ${data.length} rows`);
             if (returning) {
-                const returnings = await dao.insert(data, returning, client);
+                const result = await dao.insert(data, returning, client);
                 const basketLen = baskets[this.name].length;
-                returnings.reverse().forEach((v, i) => {
+                result.reverse().forEach((v, i) => {
                     const obj = baskets[this.name][basketLen - i - 1];
                     returning.forEach(key => {
                         obj[key] = v[key];
@@ -47,13 +48,35 @@ class Serilizable {
 
         // UPDATE OLD
         if (this.needUpdates) {
-            const data = baskets[this.name]
-                .slice(0, index)
-                .map(d => d.getFieldsToUpdate(dao.defaultParams.key))
-                .filter(v => v);
-            logger.info(`saveAll update ${this.name} - ${data.length} rows`);
-            // TODO multiple update bulk
-            await Promise.all(data.map(row => dao.update(row, client)));
+            if (returningUpdate) {
+                const data = baskets[this.name]
+                    .slice(0, index)
+                    .map(d => d.getUpdateValues(true))
+                    .filter(v => v);
+                // TEMP
+                if (data.length !== index) {
+                    throw new Error('should be equal');
+                }
+                if (data.length) {
+                    logger.info(`saveAll update ${this.name} - ${data.length} rows`);
+                    const result = await dao.bulkUpdate(this.getUpdateParams(true), data, client);
+                    result.forEach((v, i) => {
+                        const obj = baskets[this.name][i];
+                        returningUpdate.forEach(key => {
+                            obj[key] = v[key];
+                        });
+                    });
+                }
+            } else {
+                const data = baskets[this.name]
+                    .slice(0, index)
+                    .map(d => d.getUpdateValues())
+                    .filter(v => v);
+                if (data.length) {
+                    logger.info(`saveAll update ${this.name} - ${data.length} rows`);
+                    await dao.bulkUpdate(this.getUpdateParams(), data, client);
+                }
+            }
         }
 
         baskets[this.name].forEach(obj => obj.setSaved());

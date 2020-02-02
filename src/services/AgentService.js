@@ -62,6 +62,7 @@ class AgentService {
     async loadState() {
         const {dataDao, operationsDao, hypotesesDao, overlapsDao} = aggregator;
         const {processing} = this;
+        // TODO
         const data = this.agent.last_index - processing.maxDepth > 0 ?
             (await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index - processing.maxDepth))
             : [];
@@ -91,7 +92,11 @@ class AgentService {
                 last_index: this.processing.steps,
                 profit: this.processing.profit,
             }, client);
-            await Hypotes.saveAll(hypotesesDao, ['id'], client);
+            if (this.predicatesConf.common) {
+                await Hypotes.saveAll(hypotesesDao, ['id'], client, ['all', 'up', 'cumulation']);
+            } else {
+                await Hypotes.saveAll(hypotesesDao, ['id'], client);
+            }
             await Operation.saveAll(operationsDao, null, client);
             await Overlap.saveAll(overlapsDao, null, client);
             await client.query('COMMIT');

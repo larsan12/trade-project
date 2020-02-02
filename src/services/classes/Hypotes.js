@@ -1,7 +1,6 @@
 /* eslint-disable require-jsdoc */
 const Serilizable = require('./Serilizable');
 const agg = require('../Aggregator.js');
-const knex = require('knex')({client: 'pg'});
 
 class Hypotes extends Serilizable {
     constructor({comb, string, step, up = 0, block = 0, cumulation = 1, id}, isNew) {
@@ -39,22 +38,46 @@ class Hypotes extends Serilizable {
         };
     }
 
-    getFieldsToUpdate(keys) {
+    static getUpdateParams(common) {
+        const keys = agg.instance.hypotesesDao.defaultParams.key;
+        let req = `
+            up = t.up + bulk.up,
+            "all" = t."all" + bulk."all",
+            cumulation = t.cumulation * bulk.cumulation
+        `;
+        if (!common) {
+            req = `${req},
+            block = bulk.block
+            `;
+        }
+        const bulkFields = [...keys, 'up', 'all', 'cumulation'];
+        if (!common) {
+            bulkFields.push('block');
+        }
+        return {req, bulkFields};
+    }
+
+    getUpdateValues(common) {
         if (this.copy.up !== this.up ||
             this.copy.all !== this.comb.all ||
             this.cumulation !== this.copy.cumulation ||
-            this.block !== this.copy.block) {
+            this.block !== this.copy.block || common) {
+            const keys = agg.instance.hypotesesDao.defaultParams.key;
             const obj = this.getDbObject();
-            const result = {
-                up: knex.raw(`?? + ${this.up - this.copy.up}`, ['up']),
-                all: knex.raw(`?? + ${this.comb.all - this.copy.all}`, ['all']),
-                cumulation: knex.raw(`?? * ${this.cumulation / this.copy.cumulation}`, ['cumulation']),
-                block: this.block,
-            };
+            let values = [];
             keys.forEach(key => {
-                result[key] = obj[key] || this[key];
+                values.push(obj[key] || this[key]);
             });
-            return result;
+            values = values.concat([
+                this.up - this.copy.up,
+                this.comb.all - this.copy.all,
+                this.cumulation / this.copy.cumulation,
+                this.block,
+            ]);
+            if (common) {
+                values.push(this.block);
+            }
+            return values;
         }
         return false;
     }
