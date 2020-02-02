@@ -29,7 +29,7 @@ class Serilizable {
         }
 
         // SAVE NEW
-        const index = baskets[this.name].findIndex(obj => obj.isNew);
+        let index = baskets[this.name].findIndex(obj => obj.isNew);
         if (index >= 0) {
             const data = baskets[this.name]
                 .slice(index)
@@ -50,6 +50,7 @@ class Serilizable {
         }
 
         // UPDATE OLD
+        index = index === -1 ? baskets[this.name].length : index;
         if (this.needUpdates) {
             if (returningUpdate) {
                 const data = baskets[this.name]
@@ -65,6 +66,9 @@ class Serilizable {
                     const result = await dao.bulkUpdate(this.getUpdateParams(true), data, client);
                     result.forEach((v, i) => {
                         const obj = baskets[this.name][i];
+                        if (obj.id !== v.id) {
+                            throw new Error('id should be equal');
+                        }
                         returningUpdate.forEach(key => {
                             obj[key] = v[key];
                         });

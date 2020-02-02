@@ -147,6 +147,7 @@ class IDao {
             where.push(`t.${key} = bulk.${key}`);
         });
         const query = `
+        with updated as (
             UPDATE ${this.schema}.${this.tableName} as t
             SET
                 ${req}
@@ -154,7 +155,11 @@ class IDao {
                 VALUES ${values}
             ) AS bulk(${bulkFields.map(val => `"${val}"`).join(', ')})
             WHERE ${where.join(', ')} 
-            RETURNING t.*;
+            RETURNING t.*
+            )
+        SELECT *
+        FROM updated
+        ORDER BY ${this.defaultParams.order[0]} ${this.defaultParams.order[1]};
         `;
         const pgClient = client || this.pool;
         const result = await pgClient.query(query);
