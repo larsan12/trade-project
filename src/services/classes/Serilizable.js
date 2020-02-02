@@ -18,6 +18,9 @@ class Serilizable {
      * @param {String} returning - returning from db with saving in class
      * @param {Object} client - pg client for transactions
      * @param {String} returningUpdate - returning from db with updating in class
+     * @description if returningUpdate defined, then it updates every row in db(even if nothing update)
+     * and set returning value, getUpdateValues(false) should return only rows with changed fields,
+     * getUpdateValues(true) should return all rows
      */
     static async saveAll(dao, returning, client, returningUpdate) {
         if (!baskets[this.name] || !baskets[this.name].length) {
