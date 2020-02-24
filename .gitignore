@@ -1,6 +1,5 @@
 .DS_Store
 .idea
 src/node_modules/
-src/config.json
 node_modules
 *.development.*
