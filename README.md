@@ -1,5 +1,5 @@
 #### Как запустить:
- * создать таблицу main в postgresql
+ * создать базу данных main в postgresql
  * выполнить скрипт в бд из sql/dev.sql
  * поменять по необходимости src/config.json
  * **npm install**
