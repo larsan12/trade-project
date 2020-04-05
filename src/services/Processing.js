@@ -48,12 +48,10 @@ class Processing {
         return this.data[ind] && this.data[ind].time;
     }
 
+    // eslint-disable-next-line require-await
     async process(row) {
         this.data.push(row);
         this.steps++;
-        if (this.steps === 4000) {
-            await agg.instance.agentService.saveState();
-        }
         const index = this.data.length - 1;
         if (!this.data.slice(-this.stepsAhead).some(row => row.break)) {
             this.train(index - this.stepsAhead);

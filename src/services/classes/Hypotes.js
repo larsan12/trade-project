@@ -72,9 +72,8 @@ class Hypotes extends Serilizable {
                 this.up - this.copy.up,
                 this.comb.all - this.copy.all,
                 this.cumulation / this.copy.cumulation,
-                this.block,
             ]);
-            if (common) {
+            if (!common) {
                 values.push(this.block);
             }
             return values;

@@ -129,8 +129,13 @@ class IDao {
     }
 
     /**
-     * @param {Object} req - req - string, bulkFields - array of fields
-     * @param {Array} data - data
+     * @param {Object} req - object
+     *  req - string, example:
+     *      up = t.up + bulk.up,
+     *      "all" = t."all" + bulk."all",
+     *      cumulation = t.cumulation * bulk.cumulation
+     *  bulkFields - array of fields, example: Array(4) ["id", "up", "all", "cumulation"]
+     * @param {Array} data - data, example: Array(4) [829, 149, 285, 1.014291991558905]
      * @param {Object} client - pg client for transactions
      * @returns {Promise} - empty
      */
@@ -154,7 +159,7 @@ class IDao {
             FROM (
                 VALUES ${values}
             ) AS bulk(${bulkFields.map(val => `"${val}"`).join(', ')})
-            WHERE ${where.join(', ')} 
+            WHERE ${where.join(' AND ')} 
             RETURNING t.*
             )
         SELECT *

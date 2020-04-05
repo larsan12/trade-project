@@ -25,6 +25,34 @@ class Operation extends Serilizable {
             profit: this.profit,
         };
     }
+
+    setSaved() {
+        this.isNew = false;
+        this.copy = {
+            profit: this.profit,
+        };
+    }
+
+    getUpdateValues() {
+        if (!this.copy.profit && this.profit) {
+            return [
+                agg.instance.agent.id,
+                `to_timestamp(${(new Date(this.time)).getTime() / 1000})`,
+                this.profit,
+            ];
+        }
+        return false;
+    }
+
+    static getUpdateParams() {
+        const keys = agg.instance.operationsDao.defaultParams.key;
+        const req = `
+            profit = bulk.profit
+        `;
+        const bulkFields = [...keys, 'profit'];
+        return {req, bulkFields};
+    }
 }
+Operation.needUpdates = true;
 module.exports = Operation;
 
