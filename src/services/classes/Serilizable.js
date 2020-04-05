@@ -14,6 +14,10 @@ class Serilizable {
         return baskets[this.name];
     }
 
+    static set basket(val) {
+        baskets[this.name] = val;
+    }
+
     /**
      * @param {IDao} dao - IDao child
      * @param {String} returning - returning from db with saving in class

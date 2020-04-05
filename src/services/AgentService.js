@@ -47,6 +47,12 @@ class AgentService {
         logger.info(`Start training, data length: ${data.length}`);
         await data.reduce(async (promise, row, i) => {
             await promise;
+            if (i === 4000) {
+                await this.saveState();
+                await this.loadState();
+                await agentsDao.removeAgent(this.agent);
+                process.exit();
+            }
             if (i > 0 && !this.isTimeInRange(data[i - 1], row)) {
                 row.break = true;
             }
@@ -66,16 +72,66 @@ class AgentService {
             hypotesesDao,
             overlapsDao,
             Operation,
+            Hypotes,
+            Overlap,
+            Combination,
         } = aggregator;
         const {processing} = this;
-        // TODO
+
+        // clear baskets
+        Hypotes.basket = [];
+        Overlap.basket = [];
+        Operation.basket = [];
+
+        /**
+         * Load from DB
+         */
         const data = this.agent.last_index - processing.maxDepth > 0 ?
             (await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index - processing.maxDepth))
             : [];
         const operations = await operationsDao.get({agent_id: this.agent.id, profit: null});
-        const hypoteses = await hypotesesDao.get({predicate_id: this.agent.predicate.id});
+        const hypoteses = await hypotesesDao.get(
+            builder =>
+                builder
+                    .where({predicate_id: this.agent.predicate.id})
+                    .andWhere('steps_ahead', '<=', processing.stepsAhead)
+        );
         const overlaps = await overlapsDao.getLastOverlaps(this.agent.id, processing.hypotesHistsLimit);
 
+        /**
+         * Restore hypoteses and combs
+         */
+        const preCombs = {};
+        hypoteses.forEach(hypotes => {
+            const newHypotes = new Hypotes(hypotes, false);
+            if (!preCombs[hypotes.comb_id]) {
+                preCombs[hypotes.comb_id] = {
+                    hypoteses: [],
+                    all: hypotes.all,
+                };
+            }
+            preCombs[hypotes.comb_id].hypoteses[newHypotes.step - 1] = newHypotes;
+        });
+        const combs = [];
+        Object.keys(preCombs).forEach(comb_id => {
+            const string = comb_id
+                .split('-')
+                .map((id, i) => processing.predicates[i].getString(id)).join(' & ');
+            const comb = new Combination({
+                id: comb_id,
+                all: preCombs[comb_id].all,
+                string,
+                hypoteses: preCombs[comb_id].hypoteses,
+            }, false);
+            preCombs[comb_id].hypoteses.forEach(hypotes => {
+                hypotes.comb = comb;
+                hypotes.setSaved();
+            });
+            combs.push(comb);
+        });
+        processing.combs = combs;
+
+        // restore operations
         if (operations.length) {
             processing.currentOperation = new Operation(operations[0], false);
         }

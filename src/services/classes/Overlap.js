@@ -3,7 +3,7 @@ const Serilizable = require('./Serilizable');
 const agg = require('../Aggregator');
 
 class Overlap extends Serilizable {
-    constructor({time, step, value, hypotes}, isNew) {
+    constructor({time, step, value, hypotes}, isNew = true) {
         super(isNew);
         this.time = time;
         this.step = step;

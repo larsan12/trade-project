@@ -3,12 +3,21 @@ const Serilizable = require('./Serilizable');
 const agg = require('../Aggregator');
 
 class Operation extends Serilizable {
-    constructor({from, to, hypotes, time}, isNew) {
+    constructor(obj, isNew = true) {
         super(isNew);
-        this.from = from;
-        this.time = time;
-        this.to = to;
-        this.hypotes = hypotes;
+        if (isNew) {
+            const {from, to, hypotes, time} = obj;
+            this.from = from;
+            this.time = time;
+            this.to = to;
+            this.hypotes = hypotes;
+        } else {
+            this.loadStateFromDb(obj);
+        }
+    }
+
+    loadStateFromDb({hypotes, length, step}) {
+
     }
 
     getDbObject() {
