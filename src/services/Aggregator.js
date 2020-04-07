@@ -30,6 +30,7 @@ class Aggregator {
         const Hypotes = require('./classes/Hypotes');
         const Combination = require('./classes/Combination');
         const Overlap = require('./classes/Overlap');
+        const DataService = require('./DataService');
 
         const daoInject = [pool, schema, this];
         this.agentService = agent;
@@ -40,6 +41,7 @@ class Aggregator {
         this.hypotesesDao = new HypotesesDao(...daoInject);
         this.overlapsDao = new OverlapsDao(...daoInject);
         this.operationsDao = new OperationsDao(...daoInject);
+        this.dataService = new DataService();
         this.Operation = Operation;
         this.Hypotes = Hypotes;
         this.Combination = Combination;

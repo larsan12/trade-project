@@ -13,7 +13,7 @@ class Processing {
         this.predicates = predicates;
         this.config = config;
         this.stepsAhead = config.stepsAhead;
-        this.data = [];
+        this.dataService = agg.instance.dataService.init([], agent.last_index);
         this.combs = [];
         this.profit = agent.profit;
         this.steps = agent.last_index;
@@ -41,19 +41,21 @@ class Processing {
     }
 
     getProfit(start, end) {
-        return ((this.data[end].close - this.config.comission * 2) / this.data[start].close);
+        return (
+            (this.dataService.get(end).close - this.config.comission * 2) / this.dataService.get(start).close
+        );
     }
 
     getTime(ind) {
-        return this.data[ind] && this.data[ind].time;
+        return this.dataService.get(ind) && this.dataService.get(ind).time;
     }
 
     // eslint-disable-next-line require-await
     async process(row) {
-        this.data.push(row);
+        this.dataService.push(row);
         this.steps++;
-        const index = this.data.length - 1;
-        if (!this.data.slice(-this.stepsAhead).some(row => row.break)) {
+        const index = this.dataService.length - 1;
+        if (!this.dataService.slice(-this.stepsAhead).some(row => row.break)) {
             this.train(index - this.stepsAhead);
             if (index > this.trainLength) {
                 this.active = this.getActiveByTopCriteria(index);
@@ -128,7 +130,7 @@ class Processing {
     getCombIds(index) {
         try {
             return Combinatorics.cartesianProduct(...this.predicates.map(p => {
-                const ids = p.getIds(index, this.data);
+                const ids = p.getIds(index, this.dataService);
                 if (!ids || !ids.length) {
                     throw new Error('no id');
                 }
@@ -150,7 +152,7 @@ class Processing {
             const comb = this.combs[combId];
             comb.all++;
             comb.hypoteses.forEach(hypotes => {
-                if (this.data.length > index + hypotes.step) {
+                if (this.dataService.length > index + hypotes.step) {
                     if (this.isProfitable(index, index + hypotes.step)) {
                         hypotes.up++;
                     }

@@ -47,7 +47,7 @@ class AgentService {
         logger.info(`Start training, data length: ${data.length}`);
         await data.reduce(async (promise, row, i) => {
             await promise;
-            if (i === 4000) {
+            if (i === 40000) {
                 await this.saveState();
                 await this.loadState();
                 await agentsDao.removeAgent(this.agent);
@@ -60,7 +60,6 @@ class AgentService {
         }, Promise.resolve());
         const result = this.processing.getResultBody();
         await this.saveState();
-        await this.loadState();
         logger.info(`Training finished with profit: ${result.profit}`);
         await agentsDao.removeAgent(this.agent);
     }
