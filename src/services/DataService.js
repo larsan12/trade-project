@@ -26,7 +26,7 @@ class DataService {
 
     slice(...args) {
         const args2 = args.map(arg => (arg > 0 ? (arg - this.firstIndex) : arg));
-        return this.data.slice(...args);
+        return this.data.slice(...args2);
     }
 }
 

@@ -87,11 +87,11 @@ class AgentService {
         /**
          * Load from DB
          */
-        const data = this.agent.last_index - processing.maxDepth > 0 ?
+        const data = this.agent.last_index - processing.maxDepth - processing.stepsAhead > 0 ?
             (await dataDao.get({
                 where: {data_set_id: this.agent.data_set_id},
-                offset: this.agent.last_index - processing.maxDepth,
-                limit: processing.maxDepth,
+                offset: this.agent.last_index - processing.maxDepth - processing.stepsAhead,
+                limit: processing.maxDepth + processing.stepsAhead,
             }))
             : (await dataDao.get({
                 where: {data_set_id: this.agent.data_set_id},
