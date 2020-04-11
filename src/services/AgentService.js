@@ -3,6 +3,7 @@ const BaseError = require('../components/base-error');
 const predicates = require('../predicates');
 const logger = require('winston');
 const Aggregator = require('./Aggregator');
+const assert = require('assert');
 
 let aggregator;
 
@@ -40,18 +41,19 @@ class AgentService {
 
     async train() {
         const {dataDao, agentsDao} = aggregator;
-        if (this.agent.last_index > 0) {
+        if (this.agent.last_index > 0 || this.predicatesConf.common) {
             await this.loadState();
         }
-        const data = await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index);
+        const data = await dataDao.get({
+            where: {data_set_id: this.agent.data_set_id},
+            offset: this.agent.last_index,
+        });
         logger.info(`Start training, data length: ${data.length}`);
         await data.reduce(async (promise, row, i) => {
             await promise;
-            if (i === 40000) {
+            if (i === 4000) {
                 await this.saveState();
                 await this.loadState();
-                await agentsDao.removeAgent(this.agent);
-                process.exit();
             }
             if (i > 0 && !this.isTimeInRange(data[i - 1], row)) {
                 row.break = true;
@@ -86,16 +88,24 @@ class AgentService {
          * Load from DB
          */
         const data = this.agent.last_index - processing.maxDepth > 0 ?
-            (await dataDao.get({data_set_id: this.agent.data_set_id}, this.agent.last_index - processing.maxDepth))
-            : [];
-        const operations = await operationsDao.get({agent_id: this.agent.id, profit: null});
-        const hypoteses = await hypotesesDao.get(
-            builder =>
-                builder
-                    .where({predicate_id: this.agent.predicate.id})
-                    .andWhere('steps_ahead', '<=', processing.stepsAhead)
-        );
+            (await dataDao.get({
+                where: {data_set_id: this.agent.data_set_id},
+                offset: this.agent.last_index - processing.maxDepth,
+                limit: processing.maxDepth,
+            }))
+            : (await dataDao.get({
+                where: {data_set_id: this.agent.data_set_id},
+                limit: this.agent.last_index,
+            }));
+        const operations = await operationsDao.get({where: {agent_id: this.agent.id, profit: null}});
+        const hypoteses = await hypotesesDao.get({
+            where: builder => builder
+                .where({predicate_id: this.agent.predicate.id})
+                .andWhere('steps_ahead', '<=', processing.stepsAhead),
+        });
         const overlaps = await overlapsDao.getLastOverlaps(this.agent.id, processing.hypotesHistsLimit);
+
+        processing.dataService = processing.dataService.init(data, this.agent.last_index - data.length);
 
         /**
          * Restore hypoteses and combs
@@ -111,7 +121,7 @@ class AgentService {
             }
             preCombs[hypotes.comb_id].hypoteses[newHypotes.step - 1] = newHypotes;
         });
-        const combs = [];
+        const combs = {};
         Object.keys(preCombs).forEach(comb_id => {
             const string = comb_id
                 .split('-')
@@ -126,13 +136,37 @@ class AgentService {
                 hypotes.comb = comb;
                 hypotes.setSaved();
             });
-            combs.push(comb);
+            combs[comb.id] = comb;
         });
         processing.combs = combs;
+        /**
+         * Restore overlaps
+         */
+
+        const overlapsAgg = {};
+
+        overlaps.forEach(obj => {
+            if (!overlapsAgg[obj.hypotes_id]) {
+                overlapsAgg[obj.hypotes_id] = [];
+            }
+            overlapsAgg[obj.hypotes_id].push(obj);
+        });
+        Object.keys(overlapsAgg).forEach(hypotesId => {
+            overlapsAgg[hypotesId] = overlapsAgg[hypotesId].sort((a, b) => a.step - b.step);
+        });
+
+        Hypotes.basket.forEach(hypotes => {
+            if (!this.predicatesConf.common) {
+                assert(overlapsAgg[hypotes.id]);
+            }
+            hypotes.cumulationHist = overlapsAgg[hypotes.id];
+        });
 
         // restore operations
         if (operations.length) {
-            processing.currentOperation = new Operation(operations[0], false);
+            const operation = new Operation(operations[0], false);
+            operation.hypotes = Hypotes.basket.find(obj => obj.id === operations[0].hypotes_id);
+            processing.currentOperation = operation;
         }
         logger.info('loaded');
     }
@@ -157,6 +191,8 @@ class AgentService {
                 last_index: this.processing.steps,
                 profit: this.processing.profit,
             }, client);
+            this.agent.profit = this.processing.profit;
+            this.agent.last_index = this.processing.steps;
             if (this.predicatesConf.common) {
                 await Hypotes.saveAll(hypotesesDao, ['id'], client, ['all', 'up', 'cumulation']);
             } else {

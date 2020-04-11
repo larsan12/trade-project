@@ -12,12 +12,12 @@ class Operation extends Serilizable {
             this.to = to;
             this.hypotes = hypotes;
         } else {
-            this.loadStateFromDb(obj);
+            const {length, step, time} = obj;
+            this.from = step;
+            this.to = step + length;
+            this.time = time;
+            this.setSaved();
         }
-    }
-
-    loadStateFromDb({hypotes, length, step}) {
-
     }
 
     getDbObject() {

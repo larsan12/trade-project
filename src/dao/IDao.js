@@ -47,7 +47,7 @@ class IDao {
      * @param {Array} order - order
      * @returns {Promise.<Array>} - array of objects
      */
-    async get(where, offset, order) {
+    async get({where, offset, order, limit}) {
         if (!this.table) {
             throw new BaseError('set default table in constructor');
         }
@@ -58,6 +58,9 @@ class IDao {
         }
         if (offset) {
             req = req.offset(offset);
+        }
+        if (Number.isInteger(limit)) {
+            req = req.limit(limit);
         }
         const result = await req.pool();
         return result;
@@ -73,7 +76,7 @@ class IDao {
         if (!this.table) {
             throw new BaseError('set default table in constructor');
         }
-        const result = await this.get(where, offset, order);
+        const result = await this.get({where, offset, order});
         return result.length ? result[0] : null;
     }
 

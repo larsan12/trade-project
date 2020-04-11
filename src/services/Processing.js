@@ -6,6 +6,7 @@ const Combination = require('./classes/Combination');
 const Operation = require('./classes/Operation');
 const Overlap = require('./classes/Overlap');
 const agg = require('./Aggregator.js');
+const assert = require('assert');
 
 
 class Processing {
@@ -14,7 +15,7 @@ class Processing {
         this.config = config;
         this.stepsAhead = config.stepsAhead;
         this.dataService = agg.instance.dataService.init([], agent.last_index);
-        this.combs = [];
+        this.combs = {};
         this.profit = agent.profit;
         this.steps = agent.last_index;
         this.agent = agent;
@@ -62,6 +63,7 @@ class Processing {
             }
         }
         if (index > this.trainLength) {
+            assert(!this.currentOperation || this.currentOperation.to >= index);
             if (this.currentOperation && this.currentOperation.to === index) {
                 this.finishOperation();
             }
@@ -152,25 +154,21 @@ class Processing {
             const comb = this.combs[combId];
             comb.all++;
             comb.hypoteses.forEach(hypotes => {
-                if (this.dataService.length > index + hypotes.step) {
-                    if (this.isProfitable(index, index + hypotes.step)) {
-                        hypotes.up++;
-                    }
-                    const commulation = this.getProfit(index, index + hypotes.step);
+                if (this.isProfitable(index, index + hypotes.step)) {
+                    hypotes.up++;
+                }
+                const commulation = this.getProfit(index, index + hypotes.step);
 
-                    // TODO make hold on strategy
-                    if (hypotes.block <= index) {
-                        hypotes.cumulation = hypotes.cumulation * commulation;
-                        hypotes.cumulationHist.push(new Overlap({
-                            time: this.getTime(index),
-                            step: index,
-                            value: commulation,
-                            hypotes,
-                        }));
-                        hypotes.block = index + hypotes.step;
-                    }
-                } else {
-                    throw new BaseError('unexpected empty data');
+                // TODO make hold on strategy
+                if (hypotes.block <= index) {
+                    hypotes.cumulation = hypotes.cumulation * commulation;
+                    hypotes.cumulationHist.push(new Overlap({
+                        time: this.getTime(index),
+                        step: index,
+                        value: commulation,
+                        hypotes,
+                    }));
+                    hypotes.block = index + hypotes.step;
                 }
             });
         });

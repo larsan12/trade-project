@@ -16,18 +16,23 @@ class Hypotes extends Serilizable {
             this.cumulation = cumulation;
         } else {
             // restore from DB
-            const {string, steps_ahead, up, block, cumulation} = params;
+            const {string, steps_ahead, up, block, cumulation, id} = params;
             this.step = steps_ahead;
             this.cumulationHist = [];
             this.up = up;
             this.string = string;
             this.block = block;
             this.cumulation = cumulation;
+            this.id = id;
         }
     }
 
     set all(val) {
         this.comb.all = val;
+    }
+
+    get all() {
+        return this.comb && this.comb.all;
     }
 
     getDbObject() {

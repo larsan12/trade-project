@@ -30,7 +30,7 @@ const test = async () => {
             ['Compare', 'open', 3],
             ['Compare', 'close', 3],
         ],
-        common: true,
+        common: false,
     };
 
     const agentService = new AgentService(config);
