@@ -13,30 +13,12 @@ class PredicatesDao extends IDao {
             key: ['id'],
         });
     }
-    async getOrCreatePredicate(config, common, dataSetId) {
-        const serializedConfig = config.sort();
-        const where = {
-            full_config: JSON.stringify(serializedConfig),
+    async create(body, client) {
+        const {id} = await this.insert(body, 'id', client);
+        return {
+            id,
+            ...body,
         };
-        if (typeof common === 'boolean') {
-            where.common = common;
-        }
-        if (dataSetId) {
-            where.dataSetId = dataSetId;
-        }
-
-        let predicate = await this.getOne(where);
-
-        // insert if not exist
-        if (!predicate) {
-            const {id} = await this.insert(where, 'id');
-            predicate = {
-                ...where,
-                id,
-            };
-        }
-
-        return predicate;
     }
 }
 

@@ -2,6 +2,8 @@
 const IDao = require('./IDao.js');
 const BaseError = require('../components/base-error');
 const {serializeObject} = require('../components/utils');
+const logger = require('winston');
+const assert = require('assert');
 
 /**
  * @class
@@ -21,58 +23,93 @@ class AgentsDao extends IDao {
         interval: int,
         ...config
     }, predicateConfig) {
-        const divergence = parseInt(div);
-        const interval = parseInt(int);
-        const {dataSetsDao, predicatesDao} = this.agg;
+        const {dataSetsDao, predicatesDao, pool} = this.agg;
+        const client = await pool.connect();
+        try {
+            const divergence = parseInt(div);
+            const interval = parseInt(int);
+            const dataSet = await dataSetsDao.getOne({company, interval});
 
-        const predicate = await predicatesDao.getOrCreatePredicate(predicateConfig.config, predicateConfig.common);
-        const dataSet = await dataSetsDao.getOne({company, interval});
-        if (!dataSet) {
-            throw new BaseError(`no data set for company ${company}, interval: ${interval}`);
-        }
+            if (!dataSet) {
+                throw new BaseError(`no data set for company ${company}, interval: ${interval}`);
+            }
 
-        let agent = await this.getOne({
-            full_config: serializeObject(config),
-            data_set_id: dataSet.id,
-            predicate_id: predicate.id,
-        });
+            let predicate;
+            let agent;
 
-        // insert if not exist
-        if (!agent) {
-            agent = {
-                divergence,
-                full_config: serializeObject(config),
-                data_set_id: dataSet.id,
-                predicate_id: predicate.id,
-                last_index: 0,
-                profit: 1,
+            const serializedConfig = predicateConfig.config.sort();
+            const predicateBody = {
+                full_config: JSON.stringify(serializedConfig),
+                common: predicateConfig.config.common || false,
+                data_set_id: predicateConfig.config.common ? null : dataSet.id,
             };
-            const {id} = await this.insert(agent, 'id');
-            agent.id = id;
-        }
+            const predicates = await predicatesDao.get({where: predicateBody});
 
-        if (agent.divergence !== divergence) {
-            await this.update({id: agent.id, divergence});
-            agent.divergence = divergence;
-        }
+            if (predicates && predicates.length) {
+                agent = await this.getOne(builder =>
+                    builder.where({
+                        full_config: serializeObject(config),
+                        data_set_id: dataSet.id,
+                    }).whereIn('predicate_id', predicates.map(predicate => predicate.id))
+                );
+                if (agent) {
+                    if (predicateConfig.common) {
+                        predicate = predicates.find(pr => agent.predicate_id === pr.id);
+                        assert(predicate);
+                    } else {
+                        predicate = predicates.find(pr => pr.agent_id === agent.id && agent.predicate_id === pr.id);
+                        assert(predicate);
+                    }
+                }
+            }
 
-        if (!predicateConfig.common) {
-            await predicatesDao.update({
-                id: predicate.id,
-                data_set_id: dataSet.id,
-                agent_id: agent.id,
-            });
-        }
+            if (!predicate) {
+                predicate = await predicatesDao.create(predicateBody, client);
+            }
 
-        delete agent.full_config;
-        return {
-            ...agent,
-            config,
-            company,
-            interval,
-            divergence,
-            predicate,
-        };
+            // insert if not exist
+            if (!agent) {
+                agent = {
+                    divergence,
+                    full_config: serializeObject(config),
+                    data_set_id: dataSet.id,
+                    predicate_id: predicate.id,
+                    last_index: 0,
+                    profit: 1,
+                };
+                const {id} = await this.insert(agent, 'id', client);
+                agent.id = id;
+            }
+
+            if (agent.divergence !== divergence) {
+                await this.update({id: agent.id, divergence});
+                agent.divergence = divergence;
+            }
+
+            if (!predicateConfig.common) {
+                await predicatesDao.update({
+                    id: predicate.id,
+                    data_set_id: dataSet.id,
+                    agent_id: agent.id,
+                });
+            }
+
+            delete agent.full_config;
+            return {
+                ...agent,
+                config,
+                company,
+                interval,
+                divergence,
+                predicate,
+            };
+        } catch (err) {
+            logger.error(err);
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
     }
 
     /**
