@@ -51,7 +51,7 @@ class AgentService {
         logger.info(`Start training, data length: ${data.length}`);
         await data.reduce(async (promise, row, i) => {
             await promise;
-            if (i === 4000) {
+            if (i === 3000) {
                 await this.saveState();
                 await this.loadState();
             }
@@ -110,6 +110,7 @@ class AgentService {
         /**
          * Restore hypoteses and combs
          */
+
         const preCombs = {};
         hypoteses.forEach(hypotes => {
             const newHypotes = new Hypotes(hypotes, false);
@@ -139,6 +140,7 @@ class AgentService {
             combs[comb.id] = comb;
         });
         processing.combs = combs;
+
         /**
          * Restore overlaps
          */
@@ -149,7 +151,7 @@ class AgentService {
             if (!overlapsAgg[obj.hypotes_id]) {
                 overlapsAgg[obj.hypotes_id] = [];
             }
-            overlapsAgg[obj.hypotes_id].push(obj);
+            overlapsAgg[obj.hypotes_id].push(new Overlap(obj, false));
         });
         Object.keys(overlapsAgg).forEach(hypotesId => {
             overlapsAgg[hypotesId] = overlapsAgg[hypotesId].sort((a, b) => a.step - b.step);
@@ -160,6 +162,9 @@ class AgentService {
                 assert(overlapsAgg[hypotes.id]);
             }
             hypotes.cumulationHist = overlapsAgg[hypotes.id];
+            overlapsAgg[hypotes.id].forEach(overlap => {
+                overlap.hypotes = hypotes;
+            });
         });
 
         // restore operations

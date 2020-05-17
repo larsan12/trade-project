@@ -8,7 +8,9 @@ class Overlap extends Serilizable {
         this.time = time;
         this.step = step;
         this.value = value;
-        this.hypotes = hypotes;
+        if (isNew) {
+            this.hypotes = hypotes;
+        }
     }
 
     getDbObject() {
